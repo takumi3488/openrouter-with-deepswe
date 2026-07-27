@@ -1,0 +1,68 @@
+{
+  "data": [
+    {
+      "id": "anthropic/claude-opus-5-fast",
+      "canonical_slug": "anthropic/claude-opus-5-fast-20260723",
+      "name": "Claude Opus 5 (Fast)",
+      "created": 1784912546,
+      "context_length": 1000000,
+      "architecture": {
+        "modality": "text+image+file->text",
+        "input_modalities": ["text", "image", "file"],
+        "output_modalities": ["text"]
+      },
+      "pricing": {
+        "prompt": "0.00001",
+        "completion": "0.00005"
+      }
+    },
+    {
+      "id": "openai/gpt-image-old",
+      "canonical_slug": "openai/gpt-image-old",
+      "name": "GPT Image Old",
+      "created": 1577836800,
+      "context_length": 8000,
+      "architecture": {
+        "modality": "text->image",
+        "input_modalities": ["text"],
+        "output_modalities": ["image"]
+      },
+      "pricing": {
+        "prompt": "0.000002",
+        "completion": "0.000004"
+      }
+    },
+    {
+      "id": "deepseek/deepseek-v3.2",
+      "canonical_slug": "deepseek/deepseek-v3.2",
+      "name": "DeepSeek V3.2",
+      "created": 1577836800,
+      "context_length": 128000,
+      "architecture": {
+        "modality": "text->text",
+        "input_modalities": ["text"],
+        "output_modalities": ["text"]
+      },
+      "pricing": {
+        "prompt": "0.0000003",
+        "completion": "0.0000004"
+      }
+    },
+    {
+      "id": "openrouter/auto-beta",
+      "canonical_slug": "openrouter/auto-beta",
+      "name": "Auto Router (Beta)",
+      "created": 1784912546,
+      "context_length": 2000000,
+      "architecture": {
+        "modality": "text+image->text+image",
+        "input_modalities": ["text", "image"],
+        "output_modalities": ["text", "image"]
+      },
+      "pricing": {
+        "prompt": "-1",
+        "completion": "-1"
+      }
+    }
+  ]
+}

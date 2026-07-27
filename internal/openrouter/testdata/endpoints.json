@@ -1,0 +1,31 @@
+{
+  "data": {
+    "id": "deepseek/deepseek-v3.2",
+    "endpoints": [
+      {
+        "name": "Baidu | deepseek/deepseek-v3.2",
+        "provider_name": "Baidu",
+        "pricing": { "prompt": "0.0000002072", "completion": "0.0000003108" },
+        "status": 0
+      },
+      {
+        "name": "SiliconFlow | deepseek/deepseek-v3.2",
+        "provider_name": "SiliconFlow",
+        "pricing": { "prompt": "0.000000259", "completion": "0.00000042" },
+        "status": -2
+      },
+      {
+        "name": "Broken | deepseek/deepseek-v3.2",
+        "provider_name": "Broken",
+        "pricing": { "prompt": "not-a-number", "completion": "0.0000001" },
+        "status": 0
+      },
+      {
+        "name": "DeepInfra | deepseek/deepseek-v3.2",
+        "provider_name": "DeepInfra",
+        "pricing": { "prompt": "0.00000026", "completion": "0.00000038" },
+        "status": 0
+      }
+    ]
+  }
+}

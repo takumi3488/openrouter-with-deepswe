@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package modelcatalog.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "openrouter-with-deepswe/gen/modelcatalog/v1;modelcatalogv1";
+
+// ModelCatalogService manages the catalog of OpenRouter models enriched with
+// DeepSWE benchmark scores: toggling per-model visibility/favorite flags and
+// listing models for display.
+service ModelCatalogService {
+  // SetFavorite explicitly sets (not toggles) the favorite flag of a model.
+  rpc SetFavorite(SetFavoriteRequest) returns (SetFavoriteResponse);
+
+  // SetHidden explicitly sets (not toggles) the hidden flag of a model.
+  rpc SetHidden(SetHiddenRequest) returns (SetHiddenResponse);
+
+  // ListModels returns models matching the given filter, including their
+  // OpenRouter pricing and DeepSWE scores.
+  rpc ListModels(ListModelsRequest) returns (ListModelsResponse);
+}
+
+message SetFavoriteRequest {
+  string model_id = 1;
+  bool favorite = 2;
+}
+
+message SetFavoriteResponse {
+  Model model = 1;
+}
+
+message SetHiddenRequest {
+  string model_id = 1;
+  bool hidden = 2;
+}
+
+message SetHiddenResponse {
+  Model model = 1;
+}
+
+message ListModelsRequest {
+  enum Filter {
+    // Same as FILTER_VISIBLE.
+    FILTER_UNSPECIFIED = 0;
+    // Only models that are not hidden.
+    FILTER_VISIBLE = 1;
+    // Only models marked as favorite (regardless of hidden).
+    FILTER_FAVORITE = 2;
+  }
+  Filter filter = 1;
+}
+
+message ListModelsResponse {
+  repeated Model models = 1;
+}
+
+message Model {
+  string id = 1;
+  string name = 2;
+  // Empty if no provider pricing could be resolved.
+  string cheapest_provider = 3;
+  // USD per token, decimal string (not a float, to avoid precision loss).
+  string prompt_price = 4;
+  // USD per token, decimal string (not a float, to avoid precision loss).
+  string completion_price = 5;
+  bool favorite = 6;
+  bool hidden = 7;
+  int64 context_length = 8;
+  google.protobuf.Timestamp released_at = 9;
+  repeated DeepSweScore deepswe_scores = 10;
+}
+
+message DeepSweScore {
+  string harness = 1;
+  // "default" when DeepSWE reported no reasoning effort for this row.
+  string reasoning_effort = 2;
+  double pass_rate = 3;
+  double pass_at_1 = 4;
+  double pass_at_4 = 5;
+  double mean_cost_usd = 6;
+}

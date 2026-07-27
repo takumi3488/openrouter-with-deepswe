@@ -1,0 +1,46 @@
+{
+  "scope": "Every DeepSWE rollout across imported Pier jobs, grouped by configuration (harness + model + reasoning effort)",
+  "generated_at": "2026-07-25T03:13:49.273952+00:00",
+  "n_tasks_in_set": 113,
+  "rows": [
+    {
+      "model": "claude-opus-5",
+      "harness": "mini-swe-agent",
+      "reasoning_effort": "max",
+      "config": "mini_swe_agent_claude_opus_5_max",
+      "source": "deep-swe",
+      "pass_rate": 0.7364864864864865,
+      "pass_at_1": 0.7364864864864865,
+      "pass_at_4": 0.8849557522123894,
+      "n_passed": 327,
+      "n_attempted": 444,
+      "mean_cost_usd": 12.34
+    },
+    {
+      "model": "claude-opus-5",
+      "harness": "mini-swe-agent",
+      "reasoning_effort": "high",
+      "config": "mini_swe_agent_claude_opus_5_high",
+      "source": "deep-swe",
+      "pass_rate": 0.728,
+      "pass_at_1": 0.728,
+      "pass_at_4": 0.86,
+      "n_passed": 320,
+      "n_attempted": 440,
+      "mean_cost_usd": 9.1
+    },
+    {
+      "model": "kimi-k2-7-code",
+      "harness": "mini-swe-agent",
+      "reasoning_effort": "",
+      "config": "mini_swe_agent_kimi_k2_7_code",
+      "source": "deep-swe",
+      "pass_rate": 0.305,
+      "pass_at_1": 0.305,
+      "pass_at_4": 0.41,
+      "n_passed": 135,
+      "n_attempted": 444,
+      "mean_cost_usd": 3.2
+    }
+  ]
+}

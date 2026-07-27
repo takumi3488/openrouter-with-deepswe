@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS deepswe_scores;
+DROP TABLE IF EXISTS models;

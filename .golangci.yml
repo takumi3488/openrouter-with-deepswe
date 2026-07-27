@@ -1,0 +1,5 @@
+version: "2"
+issues:
+  exclude-dirs:
+    - gen
+    - internal/postgres/sqlcgen
