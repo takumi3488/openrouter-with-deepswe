@@ -21,6 +21,7 @@ type Store interface {
 	SetHidden(ctx context.Context, arg sqlcgen.SetHiddenParams) (sqlcgen.Model, error)
 	ListVisibleModels(ctx context.Context) ([]sqlcgen.Model, error)
 	ListFavoriteModels(ctx context.Context) ([]sqlcgen.Model, error)
+	ListHiddenModels(ctx context.Context) ([]sqlcgen.Model, error)
 	GetScoresByModelIDs(ctx context.Context, modelIDs []string) ([]sqlcgen.DeepsweScore, error)
 }
 
@@ -64,9 +65,12 @@ func (s *Server) ListModels(ctx context.Context, req *modelcatalogv1.ListModelsR
 		models []sqlcgen.Model
 		err    error
 	)
-	if req.GetFilter() == modelcatalogv1.ListModelsRequest_FILTER_FAVORITE {
+	switch req.GetFilter() {
+	case modelcatalogv1.ListModelsRequest_FILTER_FAVORITE:
 		models, err = s.store.ListFavoriteModels(ctx)
-	} else {
+	case modelcatalogv1.ListModelsRequest_FILTER_HIDDEN:
+		models, err = s.store.ListHiddenModels(ctx)
+	default:
 		models, err = s.store.ListVisibleModels(ctx)
 	}
 	if err != nil {
