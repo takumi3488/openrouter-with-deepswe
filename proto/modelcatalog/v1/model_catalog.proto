@@ -47,6 +47,8 @@ message ListModelsRequest {
     FILTER_VISIBLE = 1;
     // Only models marked as favorite (regardless of hidden).
     FILTER_FAVORITE = 2;
+    // Only models marked as hidden.
+    FILTER_HIDDEN = 3;
   }
   Filter filter = 1;
 }

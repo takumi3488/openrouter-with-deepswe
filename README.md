@@ -34,8 +34,9 @@ DATABASE_URL='postgres://app:app@localhost:5432/app?sslmode=disable' go run ./cm
 Serves `ModelCatalogService` (defined in `proto/modelcatalog/v1/model_catalog.proto`).
 
 - `SetFavorite` / `SetHidden`: explicitly set a model's favorite/hidden flag (a bool value, not a toggle)
-- `ListModels`: lists models filtered by `FILTER_VISIBLE` (non-hidden, default) or `FILTER_FAVORITE` (favorites only),
-  including OpenRouter pricing and all DeepSWE scores
+- `ListModels`: lists models filtered by `FILTER_VISIBLE` (non-hidden, default), `FILTER_FAVORITE`
+  (favorites regardless of visibility), or `FILTER_HIDDEN` (hidden only), including OpenRouter pricing
+  and all DeepSWE scores
 
 ```bash
 DATABASE_URL='postgres://app:app@localhost:5432/app?sslmode=disable' go run ./cmd/grpc

@@ -19,6 +19,7 @@ type fakeStore struct {
 	scores  map[string][]sqlcgen.DeepsweScore
 	visible []string // ordered ids returned by ListVisibleModels
 	fav     []string // ordered ids returned by ListFavoriteModels
+	hidden  []string // ordered ids returned by ListHiddenModels
 }
 
 func newFakeStore() *fakeStore {
@@ -54,6 +55,10 @@ func (f *fakeStore) ListVisibleModels(ctx context.Context) ([]sqlcgen.Model, err
 
 func (f *fakeStore) ListFavoriteModels(ctx context.Context) ([]sqlcgen.Model, error) {
 	return f.byIDs(f.fav), nil
+}
+
+func (f *fakeStore) ListHiddenModels(ctx context.Context) ([]sqlcgen.Model, error) {
+	return f.byIDs(f.hidden), nil
 }
 
 func (f *fakeStore) byIDs(ids []string) []sqlcgen.Model {
@@ -164,6 +169,24 @@ func TestListModels_FavoriteFilter(t *testing.T) {
 	}
 	if !resp.Models[0].Hidden {
 		t.Error("hidden favorite model should still be returned with Hidden = true")
+	}
+}
+
+func TestListModels_HiddenFilter(t *testing.T) {
+	store := newFakeStore()
+	store.models["vendor/a"] = testModel("vendor/a", false, true)
+	store.hidden = []string{"vendor/a"}
+	srv := New(store)
+
+	resp, err := srv.ListModels(context.Background(), &modelcatalogv1.ListModelsRequest{Filter: modelcatalogv1.ListModelsRequest_FILTER_HIDDEN})
+	if err != nil {
+		t.Fatalf("ListModels() error = %v", err)
+	}
+	if len(resp.Models) != 1 || resp.Models[0].Id != "vendor/a" {
+		t.Fatalf("ListModels() = %+v, want [vendor/a]", resp.Models)
+	}
+	if !resp.Models[0].Hidden {
+		t.Error("hidden model should be returned with Hidden = true")
 	}
 }
 

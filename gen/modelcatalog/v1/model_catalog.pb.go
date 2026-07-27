@@ -31,6 +31,8 @@ const (
 	ListModelsRequest_FILTER_VISIBLE ListModelsRequest_Filter = 1
 	// Only models marked as favorite (regardless of hidden).
 	ListModelsRequest_FILTER_FAVORITE ListModelsRequest_Filter = 2
+	// Only models marked as hidden.
+	ListModelsRequest_FILTER_HIDDEN ListModelsRequest_Filter = 3
 )
 
 // Enum value maps for ListModelsRequest_Filter.
@@ -39,11 +41,13 @@ var (
 		0: "FILTER_UNSPECIFIED",
 		1: "FILTER_VISIBLE",
 		2: "FILTER_FAVORITE",
+		3: "FILTER_HIDDEN",
 	}
 	ListModelsRequest_Filter_value = map[string]int32{
 		"FILTER_UNSPECIFIED": 0,
 		"FILTER_VISIBLE":     1,
 		"FILTER_FAVORITE":    2,
+		"FILTER_HIDDEN":      3,
 	}
 )
 
@@ -572,13 +576,14 @@ const file_modelcatalog_v1_model_catalog_proto_rawDesc = "" +
 	"\bmodel_id\x18\x01 \x01(\tR\amodelId\x12\x16\n" +
 	"\x06hidden\x18\x02 \x01(\bR\x06hidden\"A\n" +
 	"\x11SetHiddenResponse\x12,\n" +
-	"\x05model\x18\x01 \x01(\v2\x16.modelcatalog.v1.ModelR\x05model\"\xa1\x01\n" +
+	"\x05model\x18\x01 \x01(\v2\x16.modelcatalog.v1.ModelR\x05model\"\xb4\x01\n" +
 	"\x11ListModelsRequest\x12A\n" +
-	"\x06filter\x18\x01 \x01(\x0e2).modelcatalog.v1.ListModelsRequest.FilterR\x06filter\"I\n" +
+	"\x06filter\x18\x01 \x01(\x0e2).modelcatalog.v1.ListModelsRequest.FilterR\x06filter\"\\\n" +
 	"\x06Filter\x12\x16\n" +
 	"\x12FILTER_UNSPECIFIED\x10\x00\x12\x12\n" +
 	"\x0eFILTER_VISIBLE\x10\x01\x12\x13\n" +
-	"\x0fFILTER_FAVORITE\x10\x02\"D\n" +
+	"\x0fFILTER_FAVORITE\x10\x02\x12\x11\n" +
+	"\rFILTER_HIDDEN\x10\x03\"D\n" +
 	"\x12ListModelsResponse\x12.\n" +
 	"\x06models\x18\x01 \x03(\v2\x16.modelcatalog.v1.ModelR\x06models\"\x84\x03\n" +
 	"\x05Model\x12\x0e\n" +
