@@ -1,5 +1,11 @@
 version: "2"
-issues:
-  exclude-dirs:
-    - gen
-    - internal/postgres/sqlcgen
+linters:
+  exclusions:
+    paths:
+      - gen
+      - internal/postgres/sqlcgen
+formatters:
+  exclusions:
+    paths:
+      - gen
+      - internal/postgres/sqlcgen
