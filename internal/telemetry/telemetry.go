@@ -6,6 +6,7 @@ package telemetry
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -35,7 +36,7 @@ func Setup(ctx context.Context, serviceName, endpoint string) (Shutdown, error) 
 	}
 
 	exporter, err := otlptracegrpc.New(ctx,
-		otlptracegrpc.WithEndpoint(endpoint),
+		otlptracegrpc.WithEndpoint(stripScheme(endpoint)),
 		otlptracegrpc.WithInsecure(),
 	)
 	if err != nil {
@@ -55,4 +56,17 @@ func Setup(ctx context.Context, serviceName, endpoint string) (Shutdown, error) 
 // import path.
 func Tracer(name string) trace.Tracer {
 	return otel.Tracer(name)
+}
+
+// stripScheme removes a leading "http://" or "https://" from endpoint.
+// otlptracegrpc.WithEndpoint requires a bare host:port, but
+// OTEL_EXPORTER_OTLP_ENDPOINT is conventionally set to a full URL.
+func stripScheme(endpoint string) string {
+	if rest, ok := strings.CutPrefix(endpoint, "https://"); ok {
+		return rest
+	}
+	if rest, ok := strings.CutPrefix(endpoint, "http://"); ok {
+		return rest
+	}
+	return endpoint
 }
