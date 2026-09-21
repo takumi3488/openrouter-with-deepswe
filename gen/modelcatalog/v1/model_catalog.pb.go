@@ -367,14 +367,15 @@ type Model struct {
 	// USD per token, decimal string (not a float, to avoid precision loss).
 	PromptPrice string `protobuf:"bytes,4,opt,name=prompt_price,json=promptPrice,proto3" json:"prompt_price,omitempty"`
 	// USD per token, decimal string (not a float, to avoid precision loss).
-	CompletionPrice string                 `protobuf:"bytes,5,opt,name=completion_price,json=completionPrice,proto3" json:"completion_price,omitempty"`
-	Favorite        bool                   `protobuf:"varint,6,opt,name=favorite,proto3" json:"favorite,omitempty"`
-	Hidden          bool                   `protobuf:"varint,7,opt,name=hidden,proto3" json:"hidden,omitempty"`
-	ContextLength   int64                  `protobuf:"varint,8,opt,name=context_length,json=contextLength,proto3" json:"context_length,omitempty"`
-	ReleasedAt      *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=released_at,json=releasedAt,proto3" json:"released_at,omitempty"`
-	DeepsweScores   []*DeepSweScore        `protobuf:"bytes,10,rep,name=deepswe_scores,json=deepsweScores,proto3" json:"deepswe_scores,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	CompletionPrice     string                 `protobuf:"bytes,5,opt,name=completion_price,json=completionPrice,proto3" json:"completion_price,omitempty"`
+	Favorite            bool                   `protobuf:"varint,6,opt,name=favorite,proto3" json:"favorite,omitempty"`
+	Hidden              bool                   `protobuf:"varint,7,opt,name=hidden,proto3" json:"hidden,omitempty"`
+	ContextLength       int64                  `protobuf:"varint,8,opt,name=context_length,json=contextLength,proto3" json:"context_length,omitempty"`
+	ReleasedAt          *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=released_at,json=releasedAt,proto3" json:"released_at,omitempty"`
+	DeepsweScores       []*DeepSweScore        `protobuf:"bytes,10,rep,name=deepswe_scores,json=deepsweScores,proto3" json:"deepswe_scores,omitempty"`
+	TerminalBenchScores []*TerminalBenchScore  `protobuf:"bytes,11,rep,name=terminal_bench_scores,json=terminalBenchScores,proto3" json:"terminal_bench_scores,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
 }
 
 func (x *Model) Reset() {
@@ -477,6 +478,13 @@ func (x *Model) GetDeepsweScores() []*DeepSweScore {
 	return nil
 }
 
+func (x *Model) GetTerminalBenchScores() []*TerminalBenchScore {
+	if x != nil {
+		return x.TerminalBenchScores
+	}
+	return nil
+}
+
 type DeepSweScore struct {
 	state   protoimpl.MessageState `protogen:"open.v1"`
 	Harness string                 `protobuf:"bytes,1,opt,name=harness,proto3" json:"harness,omitempty"`
@@ -562,6 +570,85 @@ func (x *DeepSweScore) GetMeanCostUsd() float64 {
 	return 0
 }
 
+type TerminalBenchScore struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Stable leaderboard version/name, for example "4-0-0" (not "latest").
+	Leaderboard     string `protobuf:"bytes,1,opt,name=leaderboard,proto3" json:"leaderboard,omitempty"`
+	Agent           string `protobuf:"bytes,2,opt,name=agent,proto3" json:"agent,omitempty"`
+	ReasoningEffort string `protobuf:"bytes,3,opt,name=reasoning_effort,json=reasoningEffort,proto3" json:"reasoning_effort,omitempty"`
+	// Original accuracy percentage, in the range 0..100.
+	Accuracy float64 `protobuf:"fixed64,4,opt,name=accuracy,proto3" json:"accuracy,omitempty"`
+	// 95% confidence-interval half-width in percentage points.
+	AccuracyCi95HalfWidth float64 `protobuf:"fixed64,5,opt,name=accuracy_ci95_half_width,json=accuracyCi95HalfWidth,proto3" json:"accuracy_ci95_half_width,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
+}
+
+func (x *TerminalBenchScore) Reset() {
+	*x = TerminalBenchScore{}
+	mi := &file_modelcatalog_v1_model_catalog_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TerminalBenchScore) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TerminalBenchScore) ProtoMessage() {}
+
+func (x *TerminalBenchScore) ProtoReflect() protoreflect.Message {
+	mi := &file_modelcatalog_v1_model_catalog_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TerminalBenchScore.ProtoReflect.Descriptor instead.
+func (*TerminalBenchScore) Descriptor() ([]byte, []int) {
+	return file_modelcatalog_v1_model_catalog_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *TerminalBenchScore) GetLeaderboard() string {
+	if x != nil {
+		return x.Leaderboard
+	}
+	return ""
+}
+
+func (x *TerminalBenchScore) GetAgent() string {
+	if x != nil {
+		return x.Agent
+	}
+	return ""
+}
+
+func (x *TerminalBenchScore) GetReasoningEffort() string {
+	if x != nil {
+		return x.ReasoningEffort
+	}
+	return ""
+}
+
+func (x *TerminalBenchScore) GetAccuracy() float64 {
+	if x != nil {
+		return x.Accuracy
+	}
+	return 0
+}
+
+func (x *TerminalBenchScore) GetAccuracyCi95HalfWidth() float64 {
+	if x != nil {
+		return x.AccuracyCi95HalfWidth
+	}
+	return 0
+}
+
 var File_modelcatalog_v1_model_catalog_proto protoreflect.FileDescriptor
 
 const file_modelcatalog_v1_model_catalog_proto_rawDesc = "" +
@@ -585,7 +672,7 @@ const file_modelcatalog_v1_model_catalog_proto_rawDesc = "" +
 	"\x0fFILTER_FAVORITE\x10\x02\x12\x11\n" +
 	"\rFILTER_HIDDEN\x10\x03\"D\n" +
 	"\x12ListModelsResponse\x12.\n" +
-	"\x06models\x18\x01 \x03(\v2\x16.modelcatalog.v1.ModelR\x06models\"\x84\x03\n" +
+	"\x06models\x18\x01 \x03(\v2\x16.modelcatalog.v1.ModelR\x06models\"\xdd\x03\n" +
 	"\x05Model\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12+\n" +
@@ -598,14 +685,21 @@ const file_modelcatalog_v1_model_catalog_proto_rawDesc = "" +
 	"\vreleased_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"releasedAt\x12D\n" +
 	"\x0edeepswe_scores\x18\n" +
-	" \x03(\v2\x1d.modelcatalog.v1.DeepSweScoreR\rdeepsweScores\"\xcc\x01\n" +
+	" \x03(\v2\x1d.modelcatalog.v1.DeepSweScoreR\rdeepsweScores\x12W\n" +
+	"\x15terminal_bench_scores\x18\v \x03(\v2#.modelcatalog.v1.TerminalBenchScoreR\x13terminalBenchScores\"\xcc\x01\n" +
 	"\fDeepSweScore\x12\x18\n" +
 	"\aharness\x18\x01 \x01(\tR\aharness\x12)\n" +
 	"\x10reasoning_effort\x18\x02 \x01(\tR\x0freasoningEffort\x12\x1b\n" +
 	"\tpass_rate\x18\x03 \x01(\x01R\bpassRate\x12\x1a\n" +
 	"\tpass_at_1\x18\x04 \x01(\x01R\apassAt1\x12\x1a\n" +
 	"\tpass_at_4\x18\x05 \x01(\x01R\apassAt4\x12\"\n" +
-	"\rmean_cost_usd\x18\x06 \x01(\x01R\vmeanCostUsd2\x9a\x02\n" +
+	"\rmean_cost_usd\x18\x06 \x01(\x01R\vmeanCostUsd\"\xcc\x01\n" +
+	"\x12TerminalBenchScore\x12 \n" +
+	"\vleaderboard\x18\x01 \x01(\tR\vleaderboard\x12\x14\n" +
+	"\x05agent\x18\x02 \x01(\tR\x05agent\x12)\n" +
+	"\x10reasoning_effort\x18\x03 \x01(\tR\x0freasoningEffort\x12\x1a\n" +
+	"\baccuracy\x18\x04 \x01(\x01R\baccuracy\x127\n" +
+	"\x18accuracy_ci95_half_width\x18\x05 \x01(\x01R\x15accuracyCi95HalfWidth2\x9a\x02\n" +
 	"\x13ModelCatalogService\x12X\n" +
 	"\vSetFavorite\x12#.modelcatalog.v1.SetFavoriteRequest\x1a$.modelcatalog.v1.SetFavoriteResponse\x12R\n" +
 	"\tSetHidden\x12!.modelcatalog.v1.SetHiddenRequest\x1a\".modelcatalog.v1.SetHiddenResponse\x12U\n" +
@@ -625,7 +719,7 @@ func file_modelcatalog_v1_model_catalog_proto_rawDescGZIP() []byte {
 }
 
 var file_modelcatalog_v1_model_catalog_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_modelcatalog_v1_model_catalog_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_modelcatalog_v1_model_catalog_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_modelcatalog_v1_model_catalog_proto_goTypes = []any{
 	(ListModelsRequest_Filter)(0), // 0: modelcatalog.v1.ListModelsRequest.Filter
 	(*SetFavoriteRequest)(nil),    // 1: modelcatalog.v1.SetFavoriteRequest
@@ -636,26 +730,28 @@ var file_modelcatalog_v1_model_catalog_proto_goTypes = []any{
 	(*ListModelsResponse)(nil),    // 6: modelcatalog.v1.ListModelsResponse
 	(*Model)(nil),                 // 7: modelcatalog.v1.Model
 	(*DeepSweScore)(nil),          // 8: modelcatalog.v1.DeepSweScore
-	(*timestamppb.Timestamp)(nil), // 9: google.protobuf.Timestamp
+	(*TerminalBenchScore)(nil),    // 9: modelcatalog.v1.TerminalBenchScore
+	(*timestamppb.Timestamp)(nil), // 10: google.protobuf.Timestamp
 }
 var file_modelcatalog_v1_model_catalog_proto_depIdxs = []int32{
-	7, // 0: modelcatalog.v1.SetFavoriteResponse.model:type_name -> modelcatalog.v1.Model
-	7, // 1: modelcatalog.v1.SetHiddenResponse.model:type_name -> modelcatalog.v1.Model
-	0, // 2: modelcatalog.v1.ListModelsRequest.filter:type_name -> modelcatalog.v1.ListModelsRequest.Filter
-	7, // 3: modelcatalog.v1.ListModelsResponse.models:type_name -> modelcatalog.v1.Model
-	9, // 4: modelcatalog.v1.Model.released_at:type_name -> google.protobuf.Timestamp
-	8, // 5: modelcatalog.v1.Model.deepswe_scores:type_name -> modelcatalog.v1.DeepSweScore
-	1, // 6: modelcatalog.v1.ModelCatalogService.SetFavorite:input_type -> modelcatalog.v1.SetFavoriteRequest
-	3, // 7: modelcatalog.v1.ModelCatalogService.SetHidden:input_type -> modelcatalog.v1.SetHiddenRequest
-	5, // 8: modelcatalog.v1.ModelCatalogService.ListModels:input_type -> modelcatalog.v1.ListModelsRequest
-	2, // 9: modelcatalog.v1.ModelCatalogService.SetFavorite:output_type -> modelcatalog.v1.SetFavoriteResponse
-	4, // 10: modelcatalog.v1.ModelCatalogService.SetHidden:output_type -> modelcatalog.v1.SetHiddenResponse
-	6, // 11: modelcatalog.v1.ModelCatalogService.ListModels:output_type -> modelcatalog.v1.ListModelsResponse
-	9, // [9:12] is the sub-list for method output_type
-	6, // [6:9] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	7,  // 0: modelcatalog.v1.SetFavoriteResponse.model:type_name -> modelcatalog.v1.Model
+	7,  // 1: modelcatalog.v1.SetHiddenResponse.model:type_name -> modelcatalog.v1.Model
+	0,  // 2: modelcatalog.v1.ListModelsRequest.filter:type_name -> modelcatalog.v1.ListModelsRequest.Filter
+	7,  // 3: modelcatalog.v1.ListModelsResponse.models:type_name -> modelcatalog.v1.Model
+	10, // 4: modelcatalog.v1.Model.released_at:type_name -> google.protobuf.Timestamp
+	8,  // 5: modelcatalog.v1.Model.deepswe_scores:type_name -> modelcatalog.v1.DeepSweScore
+	9,  // 6: modelcatalog.v1.Model.terminal_bench_scores:type_name -> modelcatalog.v1.TerminalBenchScore
+	1,  // 7: modelcatalog.v1.ModelCatalogService.SetFavorite:input_type -> modelcatalog.v1.SetFavoriteRequest
+	3,  // 8: modelcatalog.v1.ModelCatalogService.SetHidden:input_type -> modelcatalog.v1.SetHiddenRequest
+	5,  // 9: modelcatalog.v1.ModelCatalogService.ListModels:input_type -> modelcatalog.v1.ListModelsRequest
+	2,  // 10: modelcatalog.v1.ModelCatalogService.SetFavorite:output_type -> modelcatalog.v1.SetFavoriteResponse
+	4,  // 11: modelcatalog.v1.ModelCatalogService.SetHidden:output_type -> modelcatalog.v1.SetHiddenResponse
+	6,  // 12: modelcatalog.v1.ModelCatalogService.ListModels:output_type -> modelcatalog.v1.ListModelsResponse
+	10, // [10:13] is the sub-list for method output_type
+	7,  // [7:10] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_modelcatalog_v1_model_catalog_proto_init() }
@@ -669,7 +765,7 @@ func file_modelcatalog_v1_model_catalog_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_modelcatalog_v1_model_catalog_proto_rawDesc), len(file_modelcatalog_v1_model_catalog_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   8,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

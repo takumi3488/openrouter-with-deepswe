@@ -7,8 +7,8 @@ import "google/protobuf/timestamp.proto";
 option go_package = "openrouter-with-deepswe/gen/modelcatalog/v1;modelcatalogv1";
 
 // ModelCatalogService manages the catalog of OpenRouter models enriched with
-// DeepSWE benchmark scores: toggling per-model visibility/favorite flags and
-// listing models for display.
+// DeepSWE and Terminal-Bench benchmark scores: toggling per-model
+// visibility/favorite flags and listing models for display.
 service ModelCatalogService {
   // SetFavorite explicitly sets (not toggles) the favorite flag of a model.
   rpc SetFavorite(SetFavoriteRequest) returns (SetFavoriteResponse);
@@ -17,7 +17,7 @@ service ModelCatalogService {
   rpc SetHidden(SetHiddenRequest) returns (SetHiddenResponse);
 
   // ListModels returns models matching the given filter, including their
-  // OpenRouter pricing and DeepSWE scores.
+  // OpenRouter pricing and benchmark scores.
   rpc ListModels(ListModelsRequest) returns (ListModelsResponse);
 }
 
@@ -71,6 +71,7 @@ message Model {
   int64 context_length = 8;
   google.protobuf.Timestamp released_at = 9;
   repeated DeepSweScore deepswe_scores = 10;
+  repeated TerminalBenchScore terminal_bench_scores = 11;
 }
 
 message DeepSweScore {
@@ -81,4 +82,15 @@ message DeepSweScore {
   double pass_at_1 = 4;
   double pass_at_4 = 5;
   double mean_cost_usd = 6;
+}
+
+message TerminalBenchScore {
+  // Stable leaderboard version/name, for example "4-0-0" (not "latest").
+  string leaderboard = 1;
+  string agent = 2;
+  string reasoning_effort = 3;
+  // Original accuracy percentage, in the range 0..100.
+  double accuracy = 4;
+  // 95% confidence-interval half-width in percentage points.
+  double accuracy_ci95_half_width = 5;
 }

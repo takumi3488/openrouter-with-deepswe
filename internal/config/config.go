@@ -9,8 +9,8 @@ import (
 	"strconv"
 )
 
-// Config holds settings shared across cmd/openrouter, cmd/grpc and
-// cmd/deepswe. Each binary only reads the fields it needs.
+// Config holds settings shared across cmd/openrouter, cmd/grpc, cmd/deepswe
+// and cmd/terminalbench. Each binary only reads the fields it needs.
 type Config struct {
 	// DatabaseURL is a PostgreSQL connection string, e.g.
 	// "postgres://app:app@localhost:5432/app?sslmode=disable".
@@ -23,6 +23,10 @@ type Config struct {
 	// DeepSWELeaderboardURL is the URL of the DeepSWE leaderboard JSON
 	// artifact. Overridable for tests.
 	DeepSWELeaderboardURL string
+
+	// TerminalBenchLeaderboardURL selects the Harbor Terminal-Bench leaderboard
+	// page. The leaderboard query defaults to 4-0-0.
+	TerminalBenchLeaderboardURL string
 
 	// PriceWeightInput and PriceWeightOutput weight prompt vs completion
 	// price when picking the cheapest provider for a model.
@@ -62,14 +66,15 @@ func Load() (Config, error) {
 	}
 
 	return Config{
-		DatabaseURL:           dbURL,
-		OpenRouterBaseURL:     stringEnv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"),
-		DeepSWELeaderboardURL: stringEnv("DEEPSWE_LEADERBOARD_URL", "https://deepswe.datacurve.ai/artifacts/v1.1/leaderboard-live.json"),
-		PriceWeightInput:      weightIn,
-		PriceWeightOutput:     weightOut,
-		EndpointConcurrency:   concurrency,
-		GRPCAddr:              stringEnv("GRPC_ADDR", ":50051"),
-		OTLPEndpoint:          stringEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
+		DatabaseURL:                 dbURL,
+		OpenRouterBaseURL:           stringEnv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"),
+		DeepSWELeaderboardURL:       stringEnv("DEEPSWE_LEADERBOARD_URL", "https://deepswe.datacurve.ai/artifacts/v1.1/leaderboard-live.json"),
+		TerminalBenchLeaderboardURL: stringEnv("TERMINALBENCH_LEADERBOARD_URL", "https://hub.harborframework.com/datasets/terminal-bench/terminal-bench/latest?leaderboard=4-0-0&tab=leaderboard"),
+		PriceWeightInput:            weightIn,
+		PriceWeightOutput:           weightOut,
+		EndpointConcurrency:         concurrency,
+		GRPCAddr:                    stringEnv("GRPC_ADDR", ":50051"),
+		OTLPEndpoint:                stringEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
 	}, nil
 }
 

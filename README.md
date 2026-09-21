@@ -1,8 +1,9 @@
 # openrouter-with-deepswe
 
 A set of tools that cross-references the OpenRouter model catalog with
-[DeepSWE](https://deepswe.datacurve.ai/) benchmark scores, stores the
-result in PostgreSQL, and exposes it for querying/management over gRPC.
+[DeepSWE](https://deepswe.datacurve.ai/) and
+[Terminal-Bench 4.0](https://hub.harborframework.com/datasets/terminal-bench/terminal-bench/latest?leaderboard=4-0-0&tab=leaderboard)
+benchmark scores, stores the result in PostgreSQL, and exposes it for querying/management over gRPC.
 
 ## Commands
 
@@ -36,7 +37,7 @@ Serves `ModelCatalogService` (defined in `proto/modelcatalog/v1/model_catalog.pr
 - `SetFavorite` / `SetHidden`: explicitly set a model's favorite/hidden flag (a bool value, not a toggle)
 - `ListModels`: lists models filtered by `FILTER_VISIBLE` (non-hidden, default), `FILTER_FAVORITE`
   (favorites regardless of visibility), or `FILTER_HIDDEN` (hidden only), including OpenRouter pricing
-  and all DeepSWE scores
+  and all DeepSWE and Terminal-Bench scores in separate `deepswe_scores` and `terminal_bench_scores` fields
 
 ```bash
 DATABASE_URL='postgres://app:app@localhost:5432/app?sslmode=disable' go run ./cmd/grpc
@@ -65,6 +66,34 @@ DATABASE_URL='postgres://app:app@localhost:5432/app?sslmode=disable' go run ./cm
 | `DATABASE_URL` | (required) | PostgreSQL connection string |
 | `DEEPSWE_LEADERBOARD_URL` | `https://deepswe.datacurve.ai/artifacts/v1.1/leaderboard-live.json` | URL of the leaderboard JSON |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | `localhost:4317` | Destination for OTLP/gRPC traces |
+
+### `cmd/terminalbench` — Terminal-Bench score fetch batch
+
+Fetches the public Terminal-Bench 4.0 leaderboard (`4-0-0`) through
+[Harbor's leaderboard API](https://docs.harborframework.com/core-concepts/harbor-hub/leaderboards),
+without browser automation or user credentials. Matches all visible OpenRouter models by
+provider and normalized model identity, retaining every agent/reasoning-effort combination.
+Unlike the DeepSWE batch, it refreshes matching scores on every run.
+Unmatched models are skipped and retried on later runs.
+
+Scores remain separate from DeepSWE: `accuracy` is a percentage (0–100), and
+`accuracy_ci95_half_width` is the 95% confidence-interval half-width in percentage points.
+Each score includes its leaderboard version, agent and reasoning effort; scores are not
+averaged across agents or efforts. `ListModels`, `SetFavorite` and `SetHidden` return both benchmarks.
+The additive database migration runs automatically at startup.
+
+```bash
+DATABASE_URL='postgres://app:app@localhost:5432/app?sslmode=disable' go run ./cmd/terminalbench
+```
+
+| Env var | Default | Description |
+|---|---|---|
+| `DATABASE_URL` | (required) | PostgreSQL connection string |
+| `TERMINALBENCH_LEADERBOARD_URL` | [Terminal-Bench 4.0 page](https://hub.harborframework.com/datasets/terminal-bench/terminal-bench/latest?leaderboard=4-0-0&tab=leaderboard) | Hub page URL; the `leaderboard` query selects the board, defaulting to `4-0-0`. A compatible API endpoint can be supplied for testing. |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | `localhost:4317` | Destination for OTLP/gRPC traces |
+
+Run this batch after the OpenRouter import, alongside the existing DeepSWE batch.
+Scheduling remains external to this repository.
 
 ## Development
 
@@ -97,6 +126,7 @@ export DATABASE_URL='postgres://app:app@localhost:5432/app?sslmode=disable'
 
 go run ./cmd/openrouter
 go run ./cmd/deepswe
+go run ./cmd/terminalbench
 go run ./cmd/grpc &
 
 grpcurl -plaintext -d '{"filter":"FILTER_VISIBLE"}' localhost:50051 modelcatalog.v1.ModelCatalogService/ListModels
@@ -104,7 +134,7 @@ grpcurl -plaintext -d '{"filter":"FILTER_VISIBLE"}' localhost:50051 modelcatalog
 
 ### Docker images
 
-`docker/Dockerfile.base` builds all three binaries, and `docker/Dockerfile.{grpc,openrouter,deepswe}` each
+`docker/Dockerfile.base` builds all four binaries, and `docker/Dockerfile.{grpc,openrouter,deepswe,terminalbench}` each
 repackage just their corresponding binary into a distroless image. To build locally, build the base image
 first and pass its tag as `BASE_IMAGE`.
 
@@ -113,7 +143,8 @@ docker build -f docker/Dockerfile.base -t owd-base:local .
 docker build -f docker/Dockerfile.grpc       --build-arg BASE_IMAGE=owd-base:local -t owd-grpc:local .
 docker build -f docker/Dockerfile.openrouter --build-arg BASE_IMAGE=owd-base:local -t owd-openrouter:local .
 docker build -f docker/Dockerfile.deepswe    --build-arg BASE_IMAGE=owd-base:local -t owd-deepswe:local .
+docker build -f docker/Dockerfile.terminalbench --build-arg BASE_IMAGE=owd-base:local -t owd-terminalbench:local .
 ```
 
 CI (`.github/workflows/build-and-push.yml`) pushes the base image once as `ghcr.io/<repo>/base`,
-then builds the three binaries in parallel and pushes each as `ghcr.io/<repo>/{grpc,openrouter,deepswe}`.
+then packages the four binaries in parallel and pushes each as `ghcr.io/<repo>/{grpc,openrouter,deepswe,terminalbench}`.

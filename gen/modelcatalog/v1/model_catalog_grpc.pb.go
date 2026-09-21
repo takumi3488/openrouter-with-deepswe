@@ -29,15 +29,15 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
 // ModelCatalogService manages the catalog of OpenRouter models enriched with
-// DeepSWE benchmark scores: toggling per-model visibility/favorite flags and
-// listing models for display.
+// DeepSWE and Terminal-Bench benchmark scores: toggling per-model
+// visibility/favorite flags and listing models for display.
 type ModelCatalogServiceClient interface {
 	// SetFavorite explicitly sets (not toggles) the favorite flag of a model.
 	SetFavorite(ctx context.Context, in *SetFavoriteRequest, opts ...grpc.CallOption) (*SetFavoriteResponse, error)
 	// SetHidden explicitly sets (not toggles) the hidden flag of a model.
 	SetHidden(ctx context.Context, in *SetHiddenRequest, opts ...grpc.CallOption) (*SetHiddenResponse, error)
 	// ListModels returns models matching the given filter, including their
-	// OpenRouter pricing and DeepSWE scores.
+	// OpenRouter pricing and benchmark scores.
 	ListModels(ctx context.Context, in *ListModelsRequest, opts ...grpc.CallOption) (*ListModelsResponse, error)
 }
 
@@ -84,15 +84,15 @@ func (c *modelCatalogServiceClient) ListModels(ctx context.Context, in *ListMode
 // for forward compatibility.
 //
 // ModelCatalogService manages the catalog of OpenRouter models enriched with
-// DeepSWE benchmark scores: toggling per-model visibility/favorite flags and
-// listing models for display.
+// DeepSWE and Terminal-Bench benchmark scores: toggling per-model
+// visibility/favorite flags and listing models for display.
 type ModelCatalogServiceServer interface {
 	// SetFavorite explicitly sets (not toggles) the favorite flag of a model.
 	SetFavorite(context.Context, *SetFavoriteRequest) (*SetFavoriteResponse, error)
 	// SetHidden explicitly sets (not toggles) the hidden flag of a model.
 	SetHidden(context.Context, *SetHiddenRequest) (*SetHiddenResponse, error)
 	// ListModels returns models matching the given filter, including their
-	// OpenRouter pricing and DeepSWE scores.
+	// OpenRouter pricing and benchmark scores.
 	ListModels(context.Context, *ListModelsRequest) (*ListModelsResponse, error)
 	mustEmbedUnimplementedModelCatalogServiceServer()
 }
