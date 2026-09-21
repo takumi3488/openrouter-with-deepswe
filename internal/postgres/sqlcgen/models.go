@@ -8,19 +8,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type DeepsweScore struct {
-	ModelID         string             `json:"model_id"`
-	Harness         string             `json:"harness"`
-	ReasoningEffort string             `json:"reasoning_effort"`
-	PassRate        *float64           `json:"pass_rate"`
-	PassAt1         *float64           `json:"pass_at_1"`
-	PassAt4         *float64           `json:"pass_at_4"`
-	NPassed         *int64             `json:"n_passed"`
-	NAttempted      *int64             `json:"n_attempted"`
-	MeanCostUsd     *float64           `json:"mean_cost_usd"`
-	FetchedAt       pgtype.Timestamptz `json:"fetched_at"`
-}
-
 type Model struct {
 	ID               string             `json:"id"`
 	CanonicalSlug    string             `json:"canonical_slug"`

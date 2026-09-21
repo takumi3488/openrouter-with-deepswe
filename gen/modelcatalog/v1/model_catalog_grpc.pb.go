@@ -29,8 +29,8 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
 // ModelCatalogService manages the catalog of OpenRouter models enriched with
-// DeepSWE and Terminal-Bench benchmark scores: toggling per-model
-// visibility/favorite flags and listing models for display.
+// Terminal-Bench benchmark scores: toggling per-model visibility/favorite
+// flags and listing models for display.
 type ModelCatalogServiceClient interface {
 	// SetFavorite explicitly sets (not toggles) the favorite flag of a model.
 	SetFavorite(ctx context.Context, in *SetFavoriteRequest, opts ...grpc.CallOption) (*SetFavoriteResponse, error)
@@ -84,8 +84,8 @@ func (c *modelCatalogServiceClient) ListModels(ctx context.Context, in *ListMode
 // for forward compatibility.
 //
 // ModelCatalogService manages the catalog of OpenRouter models enriched with
-// DeepSWE and Terminal-Bench benchmark scores: toggling per-model
-// visibility/favorite flags and listing models for display.
+// Terminal-Bench benchmark scores: toggling per-model visibility/favorite
+// flags and listing models for display.
 type ModelCatalogServiceServer interface {
 	// SetFavorite explicitly sets (not toggles) the favorite flag of a model.
 	SetFavorite(context.Context, *SetFavoriteRequest) (*SetFavoriteResponse, error)

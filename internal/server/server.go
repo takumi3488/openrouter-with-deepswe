@@ -22,7 +22,6 @@ type Store interface {
 	ListVisibleModels(ctx context.Context) ([]sqlcgen.Model, error)
 	ListFavoriteModels(ctx context.Context) ([]sqlcgen.Model, error)
 	ListHiddenModels(ctx context.Context) ([]sqlcgen.Model, error)
-	GetScoresByModelIDs(ctx context.Context, modelIDs []string) ([]sqlcgen.DeepsweScore, error)
 	GetTerminalBenchScoresByModelIDs(ctx context.Context, modelIDs []string) ([]sqlcgen.TerminalBenchScore, error)
 }
 
@@ -82,10 +81,6 @@ func (s *Server) ListModels(ctx context.Context, req *modelcatalogv1.ListModelsR
 	for i, m := range models {
 		ids[i] = m.ID
 	}
-	deepsweByModel, err := s.scoresByModelID(ctx, ids)
-	if err != nil {
-		return nil, err
-	}
 	terminalBenchByModel, err := s.terminalBenchScoresByModelID(ctx, ids)
 	if err != nil {
 		return nil, err
@@ -93,33 +88,17 @@ func (s *Server) ListModels(ctx context.Context, req *modelcatalogv1.ListModelsR
 
 	out := make([]*modelcatalogv1.Model, len(models))
 	for i, m := range models {
-		out[i] = toProtoModel(m, deepsweByModel[m.ID], terminalBenchByModel[m.ID])
+		out[i] = toProtoModel(m, terminalBenchByModel[m.ID])
 	}
 	return &modelcatalogv1.ListModelsResponse{Models: out}, nil
 }
 
 func (s *Server) toProtoModelWithScores(ctx context.Context, m sqlcgen.Model) (*modelcatalogv1.Model, error) {
-	deepsweScores, err := s.store.GetScoresByModelIDs(ctx, []string{m.ID})
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "get scores: %v", err)
-	}
 	terminalBenchScores, err := s.store.GetTerminalBenchScoresByModelIDs(ctx, []string{m.ID})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "get terminal bench scores: %v", err)
 	}
-	return toProtoModel(m, deepsweScores, terminalBenchScores), nil
-}
-
-func (s *Server) scoresByModelID(ctx context.Context, ids []string) (map[string][]sqlcgen.DeepsweScore, error) {
-	scores, err := s.store.GetScoresByModelIDs(ctx, ids)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "get scores: %v", err)
-	}
-	byModel := make(map[string][]sqlcgen.DeepsweScore, len(ids))
-	for _, sc := range scores {
-		byModel[sc.ModelID] = append(byModel[sc.ModelID], sc)
-	}
-	return byModel, nil
+	return toProtoModel(m, terminalBenchScores), nil
 }
 
 func (s *Server) terminalBenchScoresByModelID(ctx context.Context, ids []string) (map[string][]sqlcgen.TerminalBenchScore, error) {
@@ -141,7 +120,7 @@ func mapStoreError(err error, modelID, action string) error {
 	return status.Errorf(codes.Internal, "%s: %v", action, err)
 }
 
-func toProtoModel(m sqlcgen.Model, deepsweScores []sqlcgen.DeepsweScore, terminalBenchScores []sqlcgen.TerminalBenchScore) *modelcatalogv1.Model {
+func toProtoModel(m sqlcgen.Model, terminalBenchScores []sqlcgen.TerminalBenchScore) *modelcatalogv1.Model {
 	var provider string
 	if m.CheapestProvider != nil {
 		provider = *m.CheapestProvider
@@ -158,24 +137,10 @@ func toProtoModel(m sqlcgen.Model, deepsweScores []sqlcgen.DeepsweScore, termina
 		ContextLength:    m.ContextLength,
 		ReleasedAt:       timestamppb.New(m.ReleasedAt.Time),
 	}
-	for _, sc := range deepsweScores {
-		pm.DeepsweScores = append(pm.DeepsweScores, toProtoScore(sc))
-	}
 	for _, sc := range terminalBenchScores {
 		pm.TerminalBenchScores = append(pm.TerminalBenchScores, toProtoTerminalBenchScore(sc))
 	}
 	return pm
-}
-
-func toProtoScore(sc sqlcgen.DeepsweScore) *modelcatalogv1.DeepSweScore {
-	return &modelcatalogv1.DeepSweScore{
-		Harness:         sc.Harness,
-		ReasoningEffort: sc.ReasoningEffort,
-		PassRate:        derefFloat(sc.PassRate),
-		PassAt_1:        derefFloat(sc.PassAt1),
-		PassAt_4:        derefFloat(sc.PassAt4),
-		MeanCostUsd:     derefFloat(sc.MeanCostUsd),
-	}
 }
 
 func toProtoTerminalBenchScore(sc sqlcgen.TerminalBenchScore) *modelcatalogv1.TerminalBenchScore {
@@ -186,11 +151,4 @@ func toProtoTerminalBenchScore(sc sqlcgen.TerminalBenchScore) *modelcatalogv1.Te
 		Accuracy:              sc.Accuracy,
 		AccuracyCi95HalfWidth: sc.AccuracyCi95HalfWidth,
 	}
-}
-
-func derefFloat(f *float64) float64 {
-	if f == nil {
-		return 0
-	}
-	return *f
 }

@@ -1,6 +1,6 @@
 // Command grpc serves the ModelCatalogService gRPC API: toggling per-model
 // favorite/hidden flags and listing models with their OpenRouter pricing
-// and DeepSWE / Terminal-Bench scores.
+// and Terminal-Bench scores.
 package main
 
 import (

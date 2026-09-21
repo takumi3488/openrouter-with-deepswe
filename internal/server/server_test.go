@@ -17,9 +17,7 @@ import (
 
 type fakeStore struct {
 	models        map[string]sqlcgen.Model
-	scores        map[string][]sqlcgen.DeepsweScore
 	terminalBench map[string][]sqlcgen.TerminalBenchScore
-	deepsweErr    error
 	terminalErr   error
 	visible       []string // ordered ids returned by ListVisibleModels
 	fav           []string // ordered ids returned by ListFavoriteModels
@@ -29,7 +27,6 @@ type fakeStore struct {
 func newFakeStore() *fakeStore {
 	return &fakeStore{
 		models:        map[string]sqlcgen.Model{},
-		scores:        map[string][]sqlcgen.DeepsweScore{},
 		terminalBench: map[string][]sqlcgen.TerminalBenchScore{},
 	}
 }
@@ -74,17 +71,6 @@ func (f *fakeStore) byIDs(ids []string) []sqlcgen.Model {
 	return out
 }
 
-func (f *fakeStore) GetScoresByModelIDs(ctx context.Context, ids []string) ([]sqlcgen.DeepsweScore, error) {
-	if f.deepsweErr != nil {
-		return nil, f.deepsweErr
-	}
-	var out []sqlcgen.DeepsweScore
-	for _, id := range ids {
-		out = append(out, f.scores[id]...)
-	}
-	return out, nil
-}
-
 func (f *fakeStore) GetTerminalBenchScoresByModelIDs(ctx context.Context, ids []string) ([]sqlcgen.TerminalBenchScore, error) {
 	if f.terminalErr != nil {
 		return nil, f.terminalErr
@@ -111,10 +97,6 @@ func testModel(id string, favorite, hidden bool) sqlcgen.Model {
 }
 
 func addTestScores(store *fakeStore, modelID string) {
-	passRate := 0.75
-	store.scores[modelID] = []sqlcgen.DeepsweScore{
-		{ModelID: modelID, Harness: "mini-swe-agent", ReasoningEffort: "high", PassRate: &passRate},
-	}
 	store.terminalBench[modelID] = []sqlcgen.TerminalBenchScore{
 		{ModelID: modelID, Leaderboard: "4-0-0", Agent: "agent-a", ReasoningEffort: "low", Accuracy: 72.5, AccuracyCi95HalfWidth: 2.5},
 		{ModelID: modelID, Leaderboard: "4-0-0", Agent: "agent-b", ReasoningEffort: "high", Accuracy: 80, AccuracyCi95HalfWidth: 1.5},
@@ -134,8 +116,8 @@ func TestSetFavorite_Success(t *testing.T) {
 	if !resp.Model.Favorite {
 		t.Error("resp.Model.Favorite = false, want true")
 	}
-	if len(resp.Model.DeepsweScores) != 1 || len(resp.Model.TerminalBenchScores) != 2 {
-		t.Fatalf("scores = (%d DeepSWE, %d Terminal-Bench), want (1, 2)", len(resp.Model.DeepsweScores), len(resp.Model.TerminalBenchScores))
+	if len(resp.Model.TerminalBenchScores) != 2 {
+		t.Fatalf("TerminalBenchScores = %d, want 2", len(resp.Model.TerminalBenchScores))
 	}
 }
 
@@ -162,8 +144,8 @@ func TestSetHidden_Success(t *testing.T) {
 	if !resp.Model.Hidden {
 		t.Error("resp.Model.Hidden = false, want true")
 	}
-	if len(resp.Model.DeepsweScores) != 1 || len(resp.Model.TerminalBenchScores) != 2 {
-		t.Fatalf("scores = (%d DeepSWE, %d Terminal-Bench), want (1, 2)", len(resp.Model.DeepsweScores), len(resp.Model.TerminalBenchScores))
+	if len(resp.Model.TerminalBenchScores) != 2 {
+		t.Fatalf("TerminalBenchScores = %d, want 2", len(resp.Model.TerminalBenchScores))
 	}
 }
 
@@ -228,7 +210,7 @@ func TestListModels_HiddenFilter(t *testing.T) {
 	}
 }
 
-func TestListModels_IncludesBothBenchmarkScores(t *testing.T) {
+func TestListModels_IncludesTerminalBenchScores(t *testing.T) {
 	store := newFakeStore()
 	store.models["vendor/a"] = testModel("vendor/a", false, false)
 	store.visible = []string{"vendor/a"}
@@ -240,12 +222,6 @@ func TestListModels_IncludesBothBenchmarkScores(t *testing.T) {
 		t.Fatalf("ListModels() error = %v", err)
 	}
 	model := resp.Models[0]
-	if len(model.DeepsweScores) != 1 {
-		t.Fatalf("DeepsweScores = %+v, want 1 entry", model.DeepsweScores)
-	}
-	if model.DeepsweScores[0].ReasoningEffort != "high" || model.DeepsweScores[0].PassRate != 0.75 {
-		t.Errorf("DeepSWE score = %+v", model.DeepsweScores[0])
-	}
 	if len(model.TerminalBenchScores) != 2 {
 		t.Fatalf("TerminalBenchScores = %+v, want 2 entries", model.TerminalBenchScores)
 	}
@@ -293,7 +269,6 @@ func TestListModels_ScoreErrorsPropagate(t *testing.T) {
 		name string
 		set  func(*fakeStore)
 	}{
-		{name: "deepswe", set: func(store *fakeStore) { store.deepsweErr = errors.New("deepswe score query failed") }},
 		{name: "terminal bench", set: func(store *fakeStore) { store.terminalErr = errors.New("terminal score query failed") }},
 	}
 	for _, tt := range tests {
