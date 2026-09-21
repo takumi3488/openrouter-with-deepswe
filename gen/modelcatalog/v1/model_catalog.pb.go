@@ -358,6 +358,139 @@ func (x *ListModelsResponse) GetModels() []*Model {
 	return nil
 }
 
+type UpsertTerminalBenchScoreRequest struct {
+	state   protoimpl.MessageState `protogen:"open.v1"`
+	ModelId string                 `protobuf:"bytes,1,opt,name=model_id,json=modelId,proto3" json:"model_id,omitempty"`
+	// Stable leaderboard version/name, for example "4-0-0" (not "latest").
+	Leaderboard string `protobuf:"bytes,2,opt,name=leaderboard,proto3" json:"leaderboard,omitempty"`
+	Agent       string `protobuf:"bytes,3,opt,name=agent,proto3" json:"agent,omitempty"`
+	// Empty is stored as "default".
+	ReasoningEffort string `protobuf:"bytes,4,opt,name=reasoning_effort,json=reasoningEffort,proto3" json:"reasoning_effort,omitempty"`
+	// Accuracy percentage, in the range 0..100.
+	Accuracy float64 `protobuf:"fixed64,5,opt,name=accuracy,proto3" json:"accuracy,omitempty"`
+	// 95% confidence-interval half-width in percentage points, 0..100.
+	AccuracyCi95HalfWidth float64 `protobuf:"fixed64,6,opt,name=accuracy_ci95_half_width,json=accuracyCi95HalfWidth,proto3" json:"accuracy_ci95_half_width,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
+}
+
+func (x *UpsertTerminalBenchScoreRequest) Reset() {
+	*x = UpsertTerminalBenchScoreRequest{}
+	mi := &file_modelcatalog_v1_model_catalog_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpsertTerminalBenchScoreRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpsertTerminalBenchScoreRequest) ProtoMessage() {}
+
+func (x *UpsertTerminalBenchScoreRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_modelcatalog_v1_model_catalog_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpsertTerminalBenchScoreRequest.ProtoReflect.Descriptor instead.
+func (*UpsertTerminalBenchScoreRequest) Descriptor() ([]byte, []int) {
+	return file_modelcatalog_v1_model_catalog_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *UpsertTerminalBenchScoreRequest) GetModelId() string {
+	if x != nil {
+		return x.ModelId
+	}
+	return ""
+}
+
+func (x *UpsertTerminalBenchScoreRequest) GetLeaderboard() string {
+	if x != nil {
+		return x.Leaderboard
+	}
+	return ""
+}
+
+func (x *UpsertTerminalBenchScoreRequest) GetAgent() string {
+	if x != nil {
+		return x.Agent
+	}
+	return ""
+}
+
+func (x *UpsertTerminalBenchScoreRequest) GetReasoningEffort() string {
+	if x != nil {
+		return x.ReasoningEffort
+	}
+	return ""
+}
+
+func (x *UpsertTerminalBenchScoreRequest) GetAccuracy() float64 {
+	if x != nil {
+		return x.Accuracy
+	}
+	return 0
+}
+
+func (x *UpsertTerminalBenchScoreRequest) GetAccuracyCi95HalfWidth() float64 {
+	if x != nil {
+		return x.AccuracyCi95HalfWidth
+	}
+	return 0
+}
+
+type UpsertTerminalBenchScoreResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The score as stored, with reasoning_effort normalized.
+	Score         *TerminalBenchScore `protobuf:"bytes,1,opt,name=score,proto3" json:"score,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpsertTerminalBenchScoreResponse) Reset() {
+	*x = UpsertTerminalBenchScoreResponse{}
+	mi := &file_modelcatalog_v1_model_catalog_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpsertTerminalBenchScoreResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpsertTerminalBenchScoreResponse) ProtoMessage() {}
+
+func (x *UpsertTerminalBenchScoreResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_modelcatalog_v1_model_catalog_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpsertTerminalBenchScoreResponse.ProtoReflect.Descriptor instead.
+func (*UpsertTerminalBenchScoreResponse) Descriptor() ([]byte, []int) {
+	return file_modelcatalog_v1_model_catalog_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *UpsertTerminalBenchScoreResponse) GetScore() *TerminalBenchScore {
+	if x != nil {
+		return x.Score
+	}
+	return nil
+}
+
 type Model struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Id    string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -379,7 +512,7 @@ type Model struct {
 
 func (x *Model) Reset() {
 	*x = Model{}
-	mi := &file_modelcatalog_v1_model_catalog_proto_msgTypes[6]
+	mi := &file_modelcatalog_v1_model_catalog_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -391,7 +524,7 @@ func (x *Model) String() string {
 func (*Model) ProtoMessage() {}
 
 func (x *Model) ProtoReflect() protoreflect.Message {
-	mi := &file_modelcatalog_v1_model_catalog_proto_msgTypes[6]
+	mi := &file_modelcatalog_v1_model_catalog_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -404,7 +537,7 @@ func (x *Model) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Model.ProtoReflect.Descriptor instead.
 func (*Model) Descriptor() ([]byte, []int) {
-	return file_modelcatalog_v1_model_catalog_proto_rawDescGZIP(), []int{6}
+	return file_modelcatalog_v1_model_catalog_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *Model) GetId() string {
@@ -493,7 +626,7 @@ type TerminalBenchScore struct {
 
 func (x *TerminalBenchScore) Reset() {
 	*x = TerminalBenchScore{}
-	mi := &file_modelcatalog_v1_model_catalog_proto_msgTypes[7]
+	mi := &file_modelcatalog_v1_model_catalog_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -505,7 +638,7 @@ func (x *TerminalBenchScore) String() string {
 func (*TerminalBenchScore) ProtoMessage() {}
 
 func (x *TerminalBenchScore) ProtoReflect() protoreflect.Message {
-	mi := &file_modelcatalog_v1_model_catalog_proto_msgTypes[7]
+	mi := &file_modelcatalog_v1_model_catalog_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -518,7 +651,7 @@ func (x *TerminalBenchScore) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TerminalBenchScore.ProtoReflect.Descriptor instead.
 func (*TerminalBenchScore) Descriptor() ([]byte, []int) {
-	return file_modelcatalog_v1_model_catalog_proto_rawDescGZIP(), []int{7}
+	return file_modelcatalog_v1_model_catalog_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *TerminalBenchScore) GetLeaderboard() string {
@@ -579,7 +712,16 @@ const file_modelcatalog_v1_model_catalog_proto_rawDesc = "" +
 	"\x0fFILTER_FAVORITE\x10\x02\x12\x11\n" +
 	"\rFILTER_HIDDEN\x10\x03\"D\n" +
 	"\x12ListModelsResponse\x12.\n" +
-	"\x06models\x18\x01 \x03(\v2\x16.modelcatalog.v1.ModelR\x06models\"\xad\x03\n" +
+	"\x06models\x18\x01 \x03(\v2\x16.modelcatalog.v1.ModelR\x06models\"\xf4\x01\n" +
+	"\x1fUpsertTerminalBenchScoreRequest\x12\x19\n" +
+	"\bmodel_id\x18\x01 \x01(\tR\amodelId\x12 \n" +
+	"\vleaderboard\x18\x02 \x01(\tR\vleaderboard\x12\x14\n" +
+	"\x05agent\x18\x03 \x01(\tR\x05agent\x12)\n" +
+	"\x10reasoning_effort\x18\x04 \x01(\tR\x0freasoningEffort\x12\x1a\n" +
+	"\baccuracy\x18\x05 \x01(\x01R\baccuracy\x127\n" +
+	"\x18accuracy_ci95_half_width\x18\x06 \x01(\x01R\x15accuracyCi95HalfWidth\"]\n" +
+	" UpsertTerminalBenchScoreResponse\x129\n" +
+	"\x05score\x18\x01 \x01(\v2#.modelcatalog.v1.TerminalBenchScoreR\x05score\"\xad\x03\n" +
 	"\x05Model\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12+\n" +
@@ -598,12 +740,13 @@ const file_modelcatalog_v1_model_catalog_proto_rawDesc = "" +
 	"\x05agent\x18\x02 \x01(\tR\x05agent\x12)\n" +
 	"\x10reasoning_effort\x18\x03 \x01(\tR\x0freasoningEffort\x12\x1a\n" +
 	"\baccuracy\x18\x04 \x01(\x01R\baccuracy\x127\n" +
-	"\x18accuracy_ci95_half_width\x18\x05 \x01(\x01R\x15accuracyCi95HalfWidth2\x9a\x02\n" +
+	"\x18accuracy_ci95_half_width\x18\x05 \x01(\x01R\x15accuracyCi95HalfWidth2\x9b\x03\n" +
 	"\x13ModelCatalogService\x12X\n" +
 	"\vSetFavorite\x12#.modelcatalog.v1.SetFavoriteRequest\x1a$.modelcatalog.v1.SetFavoriteResponse\x12R\n" +
 	"\tSetHidden\x12!.modelcatalog.v1.SetHiddenRequest\x1a\".modelcatalog.v1.SetHiddenResponse\x12U\n" +
 	"\n" +
-	"ListModels\x12\".modelcatalog.v1.ListModelsRequest\x1a#.modelcatalog.v1.ListModelsResponseB<Z:openrouter-with-deepswe/gen/modelcatalog/v1;modelcatalogv1b\x06proto3"
+	"ListModels\x12\".modelcatalog.v1.ListModelsRequest\x1a#.modelcatalog.v1.ListModelsResponse\x12\x7f\n" +
+	"\x18UpsertTerminalBenchScore\x120.modelcatalog.v1.UpsertTerminalBenchScoreRequest\x1a1.modelcatalog.v1.UpsertTerminalBenchScoreResponseB<Z:openrouter-with-deepswe/gen/modelcatalog/v1;modelcatalogv1b\x06proto3"
 
 var (
 	file_modelcatalog_v1_model_catalog_proto_rawDescOnce sync.Once
@@ -618,37 +761,42 @@ func file_modelcatalog_v1_model_catalog_proto_rawDescGZIP() []byte {
 }
 
 var file_modelcatalog_v1_model_catalog_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_modelcatalog_v1_model_catalog_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_modelcatalog_v1_model_catalog_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_modelcatalog_v1_model_catalog_proto_goTypes = []any{
-	(ListModelsRequest_Filter)(0), // 0: modelcatalog.v1.ListModelsRequest.Filter
-	(*SetFavoriteRequest)(nil),    // 1: modelcatalog.v1.SetFavoriteRequest
-	(*SetFavoriteResponse)(nil),   // 2: modelcatalog.v1.SetFavoriteResponse
-	(*SetHiddenRequest)(nil),      // 3: modelcatalog.v1.SetHiddenRequest
-	(*SetHiddenResponse)(nil),     // 4: modelcatalog.v1.SetHiddenResponse
-	(*ListModelsRequest)(nil),     // 5: modelcatalog.v1.ListModelsRequest
-	(*ListModelsResponse)(nil),    // 6: modelcatalog.v1.ListModelsResponse
-	(*Model)(nil),                 // 7: modelcatalog.v1.Model
-	(*TerminalBenchScore)(nil),    // 8: modelcatalog.v1.TerminalBenchScore
-	(*timestamppb.Timestamp)(nil), // 9: google.protobuf.Timestamp
+	(ListModelsRequest_Filter)(0),            // 0: modelcatalog.v1.ListModelsRequest.Filter
+	(*SetFavoriteRequest)(nil),               // 1: modelcatalog.v1.SetFavoriteRequest
+	(*SetFavoriteResponse)(nil),              // 2: modelcatalog.v1.SetFavoriteResponse
+	(*SetHiddenRequest)(nil),                 // 3: modelcatalog.v1.SetHiddenRequest
+	(*SetHiddenResponse)(nil),                // 4: modelcatalog.v1.SetHiddenResponse
+	(*ListModelsRequest)(nil),                // 5: modelcatalog.v1.ListModelsRequest
+	(*ListModelsResponse)(nil),               // 6: modelcatalog.v1.ListModelsResponse
+	(*UpsertTerminalBenchScoreRequest)(nil),  // 7: modelcatalog.v1.UpsertTerminalBenchScoreRequest
+	(*UpsertTerminalBenchScoreResponse)(nil), // 8: modelcatalog.v1.UpsertTerminalBenchScoreResponse
+	(*Model)(nil),                            // 9: modelcatalog.v1.Model
+	(*TerminalBenchScore)(nil),               // 10: modelcatalog.v1.TerminalBenchScore
+	(*timestamppb.Timestamp)(nil),            // 11: google.protobuf.Timestamp
 }
 var file_modelcatalog_v1_model_catalog_proto_depIdxs = []int32{
-	7, // 0: modelcatalog.v1.SetFavoriteResponse.model:type_name -> modelcatalog.v1.Model
-	7, // 1: modelcatalog.v1.SetHiddenResponse.model:type_name -> modelcatalog.v1.Model
-	0, // 2: modelcatalog.v1.ListModelsRequest.filter:type_name -> modelcatalog.v1.ListModelsRequest.Filter
-	7, // 3: modelcatalog.v1.ListModelsResponse.models:type_name -> modelcatalog.v1.Model
-	9, // 4: modelcatalog.v1.Model.released_at:type_name -> google.protobuf.Timestamp
-	8, // 5: modelcatalog.v1.Model.terminal_bench_scores:type_name -> modelcatalog.v1.TerminalBenchScore
-	1, // 6: modelcatalog.v1.ModelCatalogService.SetFavorite:input_type -> modelcatalog.v1.SetFavoriteRequest
-	3, // 7: modelcatalog.v1.ModelCatalogService.SetHidden:input_type -> modelcatalog.v1.SetHiddenRequest
-	5, // 8: modelcatalog.v1.ModelCatalogService.ListModels:input_type -> modelcatalog.v1.ListModelsRequest
-	2, // 9: modelcatalog.v1.ModelCatalogService.SetFavorite:output_type -> modelcatalog.v1.SetFavoriteResponse
-	4, // 10: modelcatalog.v1.ModelCatalogService.SetHidden:output_type -> modelcatalog.v1.SetHiddenResponse
-	6, // 11: modelcatalog.v1.ModelCatalogService.ListModels:output_type -> modelcatalog.v1.ListModelsResponse
-	9, // [9:12] is the sub-list for method output_type
-	6, // [6:9] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	9,  // 0: modelcatalog.v1.SetFavoriteResponse.model:type_name -> modelcatalog.v1.Model
+	9,  // 1: modelcatalog.v1.SetHiddenResponse.model:type_name -> modelcatalog.v1.Model
+	0,  // 2: modelcatalog.v1.ListModelsRequest.filter:type_name -> modelcatalog.v1.ListModelsRequest.Filter
+	9,  // 3: modelcatalog.v1.ListModelsResponse.models:type_name -> modelcatalog.v1.Model
+	10, // 4: modelcatalog.v1.UpsertTerminalBenchScoreResponse.score:type_name -> modelcatalog.v1.TerminalBenchScore
+	11, // 5: modelcatalog.v1.Model.released_at:type_name -> google.protobuf.Timestamp
+	10, // 6: modelcatalog.v1.Model.terminal_bench_scores:type_name -> modelcatalog.v1.TerminalBenchScore
+	1,  // 7: modelcatalog.v1.ModelCatalogService.SetFavorite:input_type -> modelcatalog.v1.SetFavoriteRequest
+	3,  // 8: modelcatalog.v1.ModelCatalogService.SetHidden:input_type -> modelcatalog.v1.SetHiddenRequest
+	5,  // 9: modelcatalog.v1.ModelCatalogService.ListModels:input_type -> modelcatalog.v1.ListModelsRequest
+	7,  // 10: modelcatalog.v1.ModelCatalogService.UpsertTerminalBenchScore:input_type -> modelcatalog.v1.UpsertTerminalBenchScoreRequest
+	2,  // 11: modelcatalog.v1.ModelCatalogService.SetFavorite:output_type -> modelcatalog.v1.SetFavoriteResponse
+	4,  // 12: modelcatalog.v1.ModelCatalogService.SetHidden:output_type -> modelcatalog.v1.SetHiddenResponse
+	6,  // 13: modelcatalog.v1.ModelCatalogService.ListModels:output_type -> modelcatalog.v1.ListModelsResponse
+	8,  // 14: modelcatalog.v1.ModelCatalogService.UpsertTerminalBenchScore:output_type -> modelcatalog.v1.UpsertTerminalBenchScoreResponse
+	11, // [11:15] is the sub-list for method output_type
+	7,  // [7:11] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_modelcatalog_v1_model_catalog_proto_init() }
@@ -662,7 +810,7 @@ func file_modelcatalog_v1_model_catalog_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_modelcatalog_v1_model_catalog_proto_rawDesc), len(file_modelcatalog_v1_model_catalog_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   8,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

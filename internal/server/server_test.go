@@ -3,10 +3,12 @@ package server
 import (
 	"context"
 	"errors"
+	"math"
 	"testing"
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -22,6 +24,8 @@ type fakeStore struct {
 	visible       []string // ordered ids returned by ListVisibleModels
 	fav           []string // ordered ids returned by ListFavoriteModels
 	hidden        []string // ordered ids returned by ListHiddenModels
+	upserted      []sqlcgen.UpsertTerminalBenchScoreParams
+	upsertErr     error
 }
 
 func newFakeStore() *fakeStore {
@@ -80,6 +84,11 @@ func (f *fakeStore) GetTerminalBenchScoresByModelIDs(ctx context.Context, ids []
 		out = append(out, f.terminalBench[id]...)
 	}
 	return out, nil
+}
+
+func (f *fakeStore) UpsertTerminalBenchScore(ctx context.Context, arg sqlcgen.UpsertTerminalBenchScoreParams) error {
+	f.upserted = append(f.upserted, arg)
+	return f.upsertErr
 }
 
 func testModel(id string, favorite, hidden bool) sqlcgen.Model {
@@ -299,5 +308,149 @@ func TestListModels_CheapestProviderNilBecomesEmptyString(t *testing.T) {
 	}
 	if resp.Models[0].CheapestProvider != "" {
 		t.Errorf("CheapestProvider = %q, want empty string", resp.Models[0].CheapestProvider)
+	}
+}
+
+func TestUpsertTerminalBenchScore_StoresAndEchoesScore(t *testing.T) {
+	store := newFakeStore()
+	srv := New(store)
+
+	resp, err := srv.UpsertTerminalBenchScore(context.Background(), &modelcatalogv1.UpsertTerminalBenchScoreRequest{
+		ModelId:               "vendor/a",
+		Leaderboard:           "4-0-0",
+		Agent:                 "agent-a",
+		ReasoningEffort:       "high",
+		Accuracy:              72.5,
+		AccuracyCi95HalfWidth: 2.5,
+	})
+	if err != nil {
+		t.Fatalf("UpsertTerminalBenchScore() error = %v", err)
+	}
+
+	want := sqlcgen.UpsertTerminalBenchScoreParams{
+		ModelID: "vendor/a", Leaderboard: "4-0-0", Agent: "agent-a",
+		ReasoningEffort: "high", Accuracy: 72.5, AccuracyCi95HalfWidth: 2.5,
+	}
+	if len(store.upserted) != 1 || store.upserted[0] != want {
+		t.Fatalf("store params = %+v, want exactly one %+v", store.upserted, want)
+	}
+	got := resp.GetScore()
+	if got.GetLeaderboard() != "4-0-0" || got.GetAgent() != "agent-a" || got.GetReasoningEffort() != "high" ||
+		got.GetAccuracy() != 72.5 || got.GetAccuracyCi95HalfWidth() != 2.5 {
+		t.Errorf("response score = %+v, want the stored values echoed back", got)
+	}
+}
+
+// Manual rows must land on the same "default" reasoning-effort sentinel the
+// terminalbench batch writes; otherwise a later batch run would insert a
+// second row instead of overwriting the manual one.
+func TestUpsertTerminalBenchScore_EmptyReasoningEffortBecomesDefault(t *testing.T) {
+	store := newFakeStore()
+	srv := New(store)
+
+	resp, err := srv.UpsertTerminalBenchScore(context.Background(), &modelcatalogv1.UpsertTerminalBenchScoreRequest{
+		ModelId: "vendor/a", Leaderboard: "4-0-0", Agent: "agent-a", ReasoningEffort: "  ", Accuracy: 10,
+	})
+	if err != nil {
+		t.Fatalf("UpsertTerminalBenchScore() error = %v", err)
+	}
+	if store.upserted[0].ReasoningEffort != "default" {
+		t.Errorf("stored ReasoningEffort = %q, want %q", store.upserted[0].ReasoningEffort, "default")
+	}
+	if resp.GetScore().GetReasoningEffort() != "default" {
+		t.Errorf("response ReasoningEffort = %q, want %q", resp.GetScore().GetReasoningEffort(), "default")
+	}
+}
+
+// Padded input must be stored trimmed: an untrimmed key occupies a primary
+// key the batch can never write, leaving a permanently-manual duplicate row.
+func TestUpsertTerminalBenchScore_TrimsKeysBeforeStoring(t *testing.T) {
+	store := newFakeStore()
+	srv := New(store)
+
+	resp, err := srv.UpsertTerminalBenchScore(context.Background(), &modelcatalogv1.UpsertTerminalBenchScoreRequest{
+		ModelId:               " m1 ",
+		Leaderboard:           " 4-0-0 ",
+		Agent:                 " Codex ",
+		ReasoningEffort:       " high ",
+		Accuracy:              72.5,
+		AccuracyCi95HalfWidth: 2.5,
+	})
+	if err != nil {
+		t.Fatalf("UpsertTerminalBenchScore() error = %v", err)
+	}
+
+	want := sqlcgen.UpsertTerminalBenchScoreParams{
+		ModelID: "m1", Leaderboard: "4-0-0", Agent: "Codex",
+		ReasoningEffort: "high", Accuracy: 72.5, AccuracyCi95HalfWidth: 2.5,
+	}
+	if len(store.upserted) != 1 || store.upserted[0] != want {
+		t.Fatalf("store params = %+v, want exactly one %+v", store.upserted, want)
+	}
+	got := resp.GetScore()
+	if got.GetLeaderboard() != "4-0-0" || got.GetAgent() != "Codex" || got.GetReasoningEffort() != "high" {
+		t.Errorf("response score = %+v, want the trimmed values echoed back", got)
+	}
+}
+
+func TestUpsertTerminalBenchScore_InvalidArguments(t *testing.T) {
+	valid := func() *modelcatalogv1.UpsertTerminalBenchScoreRequest {
+		return &modelcatalogv1.UpsertTerminalBenchScoreRequest{
+			ModelId: "vendor/a", Leaderboard: "4-0-0", Agent: "agent-a", Accuracy: 50, AccuracyCi95HalfWidth: 1,
+		}
+	}
+	tests := []struct {
+		name   string
+		mutate func(*modelcatalogv1.UpsertTerminalBenchScoreRequest)
+	}{
+		{"empty model id", func(r *modelcatalogv1.UpsertTerminalBenchScoreRequest) { r.ModelId = "" }},
+		{"whitespace-only model id", func(r *modelcatalogv1.UpsertTerminalBenchScoreRequest) { r.ModelId = "\t " }},
+		{"empty leaderboard", func(r *modelcatalogv1.UpsertTerminalBenchScoreRequest) { r.Leaderboard = " " }},
+		{"empty agent", func(r *modelcatalogv1.UpsertTerminalBenchScoreRequest) { r.Agent = "" }},
+		{"negative accuracy", func(r *modelcatalogv1.UpsertTerminalBenchScoreRequest) { r.Accuracy = -1 }},
+		{"accuracy above 100", func(r *modelcatalogv1.UpsertTerminalBenchScoreRequest) { r.Accuracy = 101 }},
+		{"ci half width above 100", func(r *modelcatalogv1.UpsertTerminalBenchScoreRequest) { r.AccuracyCi95HalfWidth = 101 }},
+		{"nan accuracy", func(r *modelcatalogv1.UpsertTerminalBenchScoreRequest) { r.Accuracy = math.NaN() }},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			store := newFakeStore()
+			req := valid()
+			tt.mutate(req)
+
+			_, err := New(store).UpsertTerminalBenchScore(context.Background(), req)
+			if status.Code(err) != codes.InvalidArgument {
+				t.Fatalf("UpsertTerminalBenchScore() error = %v, want codes.InvalidArgument", err)
+			}
+			if len(store.upserted) != 0 {
+				t.Errorf("store was called with %+v, want no call on invalid input", store.upserted)
+			}
+		})
+	}
+}
+
+func TestUpsertTerminalBenchScore_StoreErrorBecomesInternal(t *testing.T) {
+	store := newFakeStore()
+	store.upsertErr = errors.New("boom")
+	srv := New(store)
+
+	_, err := srv.UpsertTerminalBenchScore(context.Background(), &modelcatalogv1.UpsertTerminalBenchScoreRequest{
+		ModelId: "vendor/a", Leaderboard: "4-0-0", Agent: "agent-a", Accuracy: 50,
+	})
+	if status.Code(err) != codes.Internal {
+		t.Fatalf("UpsertTerminalBenchScore() error = %v, want codes.Internal", err)
+	}
+}
+
+func TestUpsertTerminalBenchScore_ForeignKeyViolationBecomesNotFound(t *testing.T) {
+	store := newFakeStore()
+	store.upsertErr = &pgconn.PgError{Code: "23503", Message: "insert or update violates foreign key constraint"}
+	srv := New(store)
+
+	_, err := srv.UpsertTerminalBenchScore(context.Background(), &modelcatalogv1.UpsertTerminalBenchScoreRequest{
+		ModelId: "vendor/missing", Leaderboard: "4-0-0", Agent: "agent-a", Accuracy: 50,
+	})
+	if status.Code(err) != codes.NotFound {
+		t.Fatalf("UpsertTerminalBenchScore() error = %v, want codes.NotFound", err)
 	}
 }

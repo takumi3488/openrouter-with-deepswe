@@ -5,14 +5,18 @@ package server
 import (
 	"context"
 	"errors"
+	"math"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	modelcatalogv1 "openrouter-with-deepswe/gen/modelcatalog/v1"
 	"openrouter-with-deepswe/internal/postgres/sqlcgen"
+	"openrouter-with-deepswe/internal/terminalbench"
 )
 
 // Store is the subset of sqlcgen.Queries that Server needs.
@@ -23,6 +27,7 @@ type Store interface {
 	ListFavoriteModels(ctx context.Context) ([]sqlcgen.Model, error)
 	ListHiddenModels(ctx context.Context) ([]sqlcgen.Model, error)
 	GetTerminalBenchScoresByModelIDs(ctx context.Context, modelIDs []string) ([]sqlcgen.TerminalBenchScore, error)
+	UpsertTerminalBenchScore(ctx context.Context, arg sqlcgen.UpsertTerminalBenchScoreParams) error
 }
 
 // Server implements modelcatalogv1.ModelCatalogServiceServer.
@@ -91,6 +96,58 @@ func (s *Server) ListModels(ctx context.Context, req *modelcatalogv1.ListModelsR
 		out[i] = toProtoModel(m, terminalBenchByModel[m.ID])
 	}
 	return &modelcatalogv1.ListModelsResponse{Models: out}, nil
+}
+
+// UpsertTerminalBenchScore manually records a Terminal-Bench score for a
+// model. String keys are trimmed before validation and storage so a manual
+// row lands on exactly the primary key the terminalbench batch writes. The
+// batch unconditionally re-upserts every row it finds for a visible model,
+// so a later batch run overwrites a manual row sharing that key; manual rows
+// on hidden models, or whose key the leaderboard never produces, persist.
+func (s *Server) UpsertTerminalBenchScore(ctx context.Context, req *modelcatalogv1.UpsertTerminalBenchScoreRequest) (*modelcatalogv1.UpsertTerminalBenchScoreResponse, error) {
+	modelID := strings.TrimSpace(req.GetModelId())
+	leaderboard := strings.TrimSpace(req.GetLeaderboard())
+	agent := strings.TrimSpace(req.GetAgent())
+	for _, field := range [][2]string{{"model_id", modelID}, {"leaderboard", leaderboard}, {"agent", agent}} {
+		if field[1] == "" {
+			return nil, status.Errorf(codes.InvalidArgument, "%s must not be empty", field[0])
+		}
+	}
+	inRange := func(name string, value float64) error {
+		if math.IsNaN(value) || value < 0 || value > 100 {
+			return status.Errorf(codes.InvalidArgument, "%s must be between 0 and 100, got %v", name, value)
+		}
+		return nil
+	}
+	if err := inRange("accuracy", req.GetAccuracy()); err != nil {
+		return nil, err
+	}
+	if err := inRange("accuracy_ci95_half_width", req.GetAccuracyCi95HalfWidth()); err != nil {
+		return nil, err
+	}
+
+	params := sqlcgen.UpsertTerminalBenchScoreParams{
+		ModelID:               modelID,
+		Leaderboard:           leaderboard,
+		Agent:                 agent,
+		ReasoningEffort:       terminalbench.EffortOrDefault(strings.TrimSpace(req.GetReasoningEffort())),
+		Accuracy:              req.GetAccuracy(),
+		AccuracyCi95HalfWidth: req.GetAccuracyCi95HalfWidth(),
+	}
+	if err := s.store.UpsertTerminalBenchScore(ctx, params); err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23503" {
+			return nil, status.Errorf(codes.NotFound, "model %q not found", modelID)
+		}
+		return nil, mapStoreError(err, modelID, "upsert terminal bench score")
+	}
+	return &modelcatalogv1.UpsertTerminalBenchScoreResponse{Score: &modelcatalogv1.TerminalBenchScore{
+		Leaderboard:           params.Leaderboard,
+		Agent:                 params.Agent,
+		ReasoningEffort:       params.ReasoningEffort,
+		Accuracy:              params.Accuracy,
+		AccuracyCi95HalfWidth: params.AccuracyCi95HalfWidth,
+	}}, nil
 }
 
 func (s *Server) toProtoModelWithScores(ctx context.Context, m sqlcgen.Model) (*modelcatalogv1.Model, error) {
