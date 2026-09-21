@@ -111,47 +111,6 @@ func (q *Queries) ListHiddenModels(ctx context.Context) ([]Model, error) {
 	return items, nil
 }
 
-const listModelsWithoutScores = `-- name: ListModelsWithoutScores :many
-SELECT id, canonical_slug, name, released_at, context_length, cheapest_provider, prompt_price, completion_price, favorite, hidden, last_seen_at, created_at, updated_at FROM models m
-WHERE hidden = FALSE
-  AND NOT EXISTS (SELECT 1 FROM deepswe_scores s WHERE s.model_id = m.id)
-ORDER BY released_at DESC
-`
-
-func (q *Queries) ListModelsWithoutScores(ctx context.Context) ([]Model, error) {
-	rows, err := q.db.Query(ctx, listModelsWithoutScores)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Model
-	for rows.Next() {
-		var i Model
-		if err := rows.Scan(
-			&i.ID,
-			&i.CanonicalSlug,
-			&i.Name,
-			&i.ReleasedAt,
-			&i.ContextLength,
-			&i.CheapestProvider,
-			&i.PromptPrice,
-			&i.CompletionPrice,
-			&i.Favorite,
-			&i.Hidden,
-			&i.LastSeenAt,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const listVisibleModels = `-- name: ListVisibleModels :many
 SELECT id, canonical_slug, name, released_at, context_length, cheapest_provider, prompt_price, completion_price, favorite, hidden, last_seen_at, created_at, updated_at FROM models WHERE hidden = FALSE ORDER BY released_at DESC
 `

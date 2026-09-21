@@ -38,9 +38,3 @@ SELECT * FROM models WHERE favorite = TRUE ORDER BY released_at DESC;
 
 -- name: ListHiddenModels :many
 SELECT * FROM models WHERE hidden = TRUE ORDER BY released_at DESC;
-
--- name: ListModelsWithoutScores :many
-SELECT * FROM models m
-WHERE hidden = FALSE
-  AND NOT EXISTS (SELECT 1 FROM deepswe_scores s WHERE s.model_id = m.id)
-ORDER BY released_at DESC;

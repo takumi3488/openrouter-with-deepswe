@@ -106,83 +106,12 @@ func TestListVisibleModels_ExcludesHidden(t *testing.T) {
 	}
 }
 
-func TestListModelsWithoutScores(t *testing.T) {
-	_, q := testdb.New(t)
-	ctx := context.Background()
-
-	must(t, q.UpsertModel(ctx, upsertParams("vendor/scored", time.Now())))
-	must(t, q.UpsertModel(ctx, upsertParams("vendor/unscored", time.Now())))
-	must(t, q.UpsertModel(ctx, upsertParams("vendor/hidden-unscored", time.Now())))
-	if _, err := q.SetHidden(ctx, sqlcgen.SetHiddenParams{ID: "vendor/hidden-unscored", Hidden: true}); err != nil {
-		t.Fatalf("SetHidden: %v", err)
-	}
-
-	must(t, q.UpsertDeepsweScore(ctx, sqlcgen.UpsertDeepsweScoreParams{
-		ModelID:         "vendor/scored",
-		Harness:         "mini-swe-agent",
-		ReasoningEffort: "high",
-		PassRate:        ptr(0.5),
-	}))
-
-	targets, err := q.ListModelsWithoutScores(ctx)
-	if err != nil {
-		t.Fatalf("ListModelsWithoutScores: %v", err)
-	}
-	ids := idSet(targets)
-	if ids["vendor/scored"] {
-		t.Error("scored model must not be a target")
-	}
-	if !ids["vendor/unscored"] {
-		t.Error("unscored visible model should be a target")
-	}
-	if ids["vendor/hidden-unscored"] {
-		t.Error("hidden model must not be a target even without scores")
-	}
-}
-
-func TestUpsertDeepsweScore_UpdatesOnReRun(t *testing.T) {
-	_, q := testdb.New(t)
-	ctx := context.Background()
-
-	must(t, q.UpsertModel(ctx, upsertParams("vendor/scored-model", time.Now())))
-
-	must(t, q.UpsertDeepsweScore(ctx, sqlcgen.UpsertDeepsweScoreParams{
-		ModelID:         "vendor/scored-model",
-		Harness:         "mini-swe-agent",
-		ReasoningEffort: "high",
-		PassRate:        ptr(0.5),
-	}))
-	must(t, q.UpsertDeepsweScore(ctx, sqlcgen.UpsertDeepsweScoreParams{
-		ModelID:         "vendor/scored-model",
-		Harness:         "mini-swe-agent",
-		ReasoningEffort: "high",
-		PassRate:        ptr(0.75),
-	}))
-
-	scores, err := q.GetScoresByModelIDs(ctx, []string{"vendor/scored-model"})
-	if err != nil {
-		t.Fatalf("GetScoresByModelIDs: %v", err)
-	}
-	if len(scores) != 1 {
-		t.Fatalf("got %d scores, want 1 (re-run should update, not duplicate)", len(scores))
-	}
-	if scores[0].PassRate == nil || *scores[0].PassRate != 0.75 {
-		t.Errorf("PassRate = %v, want 0.75", scores[0].PassRate)
-	}
-}
-
 func TestUpsertTerminalBenchScore_PreservesDimensionsAndUpdatesOnReRun(t *testing.T) {
 	_, q := testdb.New(t)
 	ctx := context.Background()
 	const modelID = "vendor/terminal-bench-model"
 
 	must(t, q.UpsertModel(ctx, upsertParams(modelID, time.Now())))
-	must(t, q.UpsertDeepsweScore(ctx, sqlcgen.UpsertDeepsweScoreParams{
-		ModelID:         modelID,
-		Harness:         "mini-swe-agent",
-		ReasoningEffort: "high",
-		PassRate:        ptr(0.5),
-	}))
 
 	scores := []sqlcgen.UpsertTerminalBenchScoreParams{
 		{
@@ -239,14 +168,6 @@ func TestUpsertTerminalBenchScore_PreservesDimensionsAndUpdatesOnReRun(t *testin
 			t.Errorf("score[%d] = %+v, want %+v", i, got[i], want[i])
 		}
 	}
-
-	deepswe, err := q.GetScoresByModelIDs(ctx, []string{modelID})
-	if err != nil {
-		t.Fatalf("GetScoresByModelIDs: %v", err)
-	}
-	if len(deepswe) != 1 {
-		t.Fatalf("got %d DeepSWE scores, want 1 alongside Terminal-Bench", len(deepswe))
-	}
 }
 
 func must(t *testing.T, err error) {
@@ -263,5 +184,3 @@ func idSet(models []sqlcgen.Model) map[string]bool {
 	}
 	return out
 }
-
-func ptr[T any](v T) *T { return &v }

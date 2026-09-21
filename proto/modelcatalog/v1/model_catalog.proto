@@ -7,8 +7,8 @@ import "google/protobuf/timestamp.proto";
 option go_package = "openrouter-with-deepswe/gen/modelcatalog/v1;modelcatalogv1";
 
 // ModelCatalogService manages the catalog of OpenRouter models enriched with
-// DeepSWE and Terminal-Bench benchmark scores: toggling per-model
-// visibility/favorite flags and listing models for display.
+// Terminal-Bench benchmark scores: toggling per-model visibility/favorite
+// flags and listing models for display.
 service ModelCatalogService {
   // SetFavorite explicitly sets (not toggles) the favorite flag of a model.
   rpc SetFavorite(SetFavoriteRequest) returns (SetFavoriteResponse);
@@ -70,18 +70,9 @@ message Model {
   bool hidden = 7;
   int64 context_length = 8;
   google.protobuf.Timestamp released_at = 9;
-  repeated DeepSweScore deepswe_scores = 10;
+  reserved 10;
+  reserved "deepswe_scores";
   repeated TerminalBenchScore terminal_bench_scores = 11;
-}
-
-message DeepSweScore {
-  string harness = 1;
-  // "default" when DeepSWE reported no reasoning effort for this row.
-  string reasoning_effort = 2;
-  double pass_rate = 3;
-  double pass_at_1 = 4;
-  double pass_at_4 = 5;
-  double mean_cost_usd = 6;
 }
 
 message TerminalBenchScore {
