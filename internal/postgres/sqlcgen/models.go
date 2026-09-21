@@ -36,3 +36,13 @@ type Model struct {
 	CreatedAt        pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
 }
+
+type TerminalBenchScore struct {
+	ModelID               string             `json:"model_id"`
+	Leaderboard           string             `json:"leaderboard"`
+	Agent                 string             `json:"agent"`
+	ReasoningEffort       string             `json:"reasoning_effort"`
+	Accuracy              float64            `json:"accuracy"`
+	AccuracyCi95HalfWidth float64            `json:"accuracy_ci95_half_width"`
+	FetchedAt             pgtype.Timestamptz `json:"fetched_at"`
+}

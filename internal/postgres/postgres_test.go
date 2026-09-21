@@ -171,6 +171,84 @@ func TestUpsertDeepsweScore_UpdatesOnReRun(t *testing.T) {
 	}
 }
 
+func TestUpsertTerminalBenchScore_PreservesDimensionsAndUpdatesOnReRun(t *testing.T) {
+	_, q := testdb.New(t)
+	ctx := context.Background()
+	const modelID = "vendor/terminal-bench-model"
+
+	must(t, q.UpsertModel(ctx, upsertParams(modelID, time.Now())))
+	must(t, q.UpsertDeepsweScore(ctx, sqlcgen.UpsertDeepsweScoreParams{
+		ModelID:         modelID,
+		Harness:         "mini-swe-agent",
+		ReasoningEffort: "high",
+		PassRate:        ptr(0.5),
+	}))
+
+	scores := []sqlcgen.UpsertTerminalBenchScoreParams{
+		{
+			ModelID:               modelID,
+			Leaderboard:           "4-0-0",
+			Agent:                 "agent-a",
+			ReasoningEffort:       "high",
+			Accuracy:              70,
+			AccuracyCi95HalfWidth: 5,
+		},
+		{
+			ModelID:               modelID,
+			Leaderboard:           "4-0-0",
+			Agent:                 "agent-a",
+			ReasoningEffort:       "low",
+			Accuracy:              60,
+			AccuracyCi95HalfWidth: 4,
+		},
+		{
+			ModelID:               modelID,
+			Leaderboard:           "4-0-0",
+			Agent:                 "agent-b",
+			ReasoningEffort:       "high",
+			Accuracy:              55,
+			AccuracyCi95HalfWidth: 3,
+		},
+	}
+	for _, score := range scores {
+		must(t, q.UpsertTerminalBenchScore(ctx, score))
+	}
+	scores[0].Accuracy = 75
+	scores[0].AccuracyCi95HalfWidth = 6
+	must(t, q.UpsertTerminalBenchScore(ctx, scores[0]))
+
+	got, err := q.GetTerminalBenchScoresByModelIDs(ctx, []string{modelID})
+	if err != nil {
+		t.Fatalf("GetTerminalBenchScoresByModelIDs: %v", err)
+	}
+	if len(got) != len(scores) {
+		t.Fatalf("got %d Terminal-Bench scores, want %d after rerun", len(got), len(scores))
+	}
+	want := []sqlcgen.TerminalBenchScore{
+		{ModelID: modelID, Leaderboard: "4-0-0", Agent: "agent-a", ReasoningEffort: "high", Accuracy: 75, AccuracyCi95HalfWidth: 6},
+		{ModelID: modelID, Leaderboard: "4-0-0", Agent: "agent-a", ReasoningEffort: "low", Accuracy: 60, AccuracyCi95HalfWidth: 4},
+		{ModelID: modelID, Leaderboard: "4-0-0", Agent: "agent-b", ReasoningEffort: "high", Accuracy: 55, AccuracyCi95HalfWidth: 3},
+	}
+	for i := range want {
+		if got[i].ModelID != want[i].ModelID ||
+			got[i].Leaderboard != want[i].Leaderboard ||
+			got[i].Agent != want[i].Agent ||
+			got[i].ReasoningEffort != want[i].ReasoningEffort ||
+			got[i].Accuracy != want[i].Accuracy ||
+			got[i].AccuracyCi95HalfWidth != want[i].AccuracyCi95HalfWidth {
+			t.Errorf("score[%d] = %+v, want %+v", i, got[i], want[i])
+		}
+	}
+
+	deepswe, err := q.GetScoresByModelIDs(ctx, []string{modelID})
+	if err != nil {
+		t.Fatalf("GetScoresByModelIDs: %v", err)
+	}
+	if len(deepswe) != 1 {
+		t.Fatalf("got %d DeepSWE scores, want 1 alongside Terminal-Bench", len(deepswe))
+	}
+}
+
 func must(t *testing.T, err error) {
 	t.Helper()
 	if err != nil {
