@@ -37,6 +37,13 @@ Serves `ModelCatalogService` (defined in `proto/modelcatalog/v1/model_catalog.pr
 - `ListModels`: lists models filtered by `FILTER_VISIBLE` (non-hidden, default), `FILTER_FAVORITE`
   (favorites regardless of visibility), or `FILTER_HIDDEN` (hidden only), including OpenRouter pricing
   and all Terminal-Bench scores in a `terminal_bench_scores` field
+- `UpsertTerminalBenchScore`: manually records one Terminal-Bench score for a model, keyed by
+  model / leaderboard / agent / reasoning effort (keys are trimmed; an empty reasoning effort is
+  stored as `default`, matching the batch). Unknown model IDs return `NOT_FOUND`; empty keys or
+  accuracy values outside 0–100 return `INVALID_ARGUMENT`. Precedence: `cmd/terminalbench` iterates
+  visible models only and re-upserts every matching row on each run, so a later batch run overwrites
+  a manual row with the same key on a visible model; manual rows on hidden models, or whose key the
+  leaderboard never produces, persist.
 
 ```bash
 DATABASE_URL='postgres://app:app@localhost:5432/app?sslmode=disable' go run ./cmd/grpc

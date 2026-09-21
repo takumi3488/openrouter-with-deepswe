@@ -19,9 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ModelCatalogService_SetFavorite_FullMethodName = "/modelcatalog.v1.ModelCatalogService/SetFavorite"
-	ModelCatalogService_SetHidden_FullMethodName   = "/modelcatalog.v1.ModelCatalogService/SetHidden"
-	ModelCatalogService_ListModels_FullMethodName  = "/modelcatalog.v1.ModelCatalogService/ListModels"
+	ModelCatalogService_SetFavorite_FullMethodName              = "/modelcatalog.v1.ModelCatalogService/SetFavorite"
+	ModelCatalogService_SetHidden_FullMethodName                = "/modelcatalog.v1.ModelCatalogService/SetHidden"
+	ModelCatalogService_ListModels_FullMethodName               = "/modelcatalog.v1.ModelCatalogService/ListModels"
+	ModelCatalogService_UpsertTerminalBenchScore_FullMethodName = "/modelcatalog.v1.ModelCatalogService/UpsertTerminalBenchScore"
 )
 
 // ModelCatalogServiceClient is the client API for ModelCatalogService service.
@@ -39,6 +40,10 @@ type ModelCatalogServiceClient interface {
 	// ListModels returns models matching the given filter, including their
 	// OpenRouter pricing and benchmark scores.
 	ListModels(ctx context.Context, in *ListModelsRequest, opts ...grpc.CallOption) (*ListModelsResponse, error)
+	// UpsertTerminalBenchScore manually records a Terminal-Bench score for a
+	// model. The terminalbench batch re-upserts every matching row on each run,
+	// so a later CronJob run overwrites a manual row with the same key.
+	UpsertTerminalBenchScore(ctx context.Context, in *UpsertTerminalBenchScoreRequest, opts ...grpc.CallOption) (*UpsertTerminalBenchScoreResponse, error)
 }
 
 type modelCatalogServiceClient struct {
@@ -79,6 +84,16 @@ func (c *modelCatalogServiceClient) ListModels(ctx context.Context, in *ListMode
 	return out, nil
 }
 
+func (c *modelCatalogServiceClient) UpsertTerminalBenchScore(ctx context.Context, in *UpsertTerminalBenchScoreRequest, opts ...grpc.CallOption) (*UpsertTerminalBenchScoreResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpsertTerminalBenchScoreResponse)
+	err := c.cc.Invoke(ctx, ModelCatalogService_UpsertTerminalBenchScore_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ModelCatalogServiceServer is the server API for ModelCatalogService service.
 // All implementations must embed UnimplementedModelCatalogServiceServer
 // for forward compatibility.
@@ -94,6 +109,10 @@ type ModelCatalogServiceServer interface {
 	// ListModels returns models matching the given filter, including their
 	// OpenRouter pricing and benchmark scores.
 	ListModels(context.Context, *ListModelsRequest) (*ListModelsResponse, error)
+	// UpsertTerminalBenchScore manually records a Terminal-Bench score for a
+	// model. The terminalbench batch re-upserts every matching row on each run,
+	// so a later CronJob run overwrites a manual row with the same key.
+	UpsertTerminalBenchScore(context.Context, *UpsertTerminalBenchScoreRequest) (*UpsertTerminalBenchScoreResponse, error)
 	mustEmbedUnimplementedModelCatalogServiceServer()
 }
 
@@ -112,6 +131,9 @@ func (UnimplementedModelCatalogServiceServer) SetHidden(context.Context, *SetHid
 }
 func (UnimplementedModelCatalogServiceServer) ListModels(context.Context, *ListModelsRequest) (*ListModelsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListModels not implemented")
+}
+func (UnimplementedModelCatalogServiceServer) UpsertTerminalBenchScore(context.Context, *UpsertTerminalBenchScoreRequest) (*UpsertTerminalBenchScoreResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpsertTerminalBenchScore not implemented")
 }
 func (UnimplementedModelCatalogServiceServer) mustEmbedUnimplementedModelCatalogServiceServer() {}
 func (UnimplementedModelCatalogServiceServer) testEmbeddedByValue()                             {}
@@ -188,6 +210,24 @@ func _ModelCatalogService_ListModels_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ModelCatalogService_UpsertTerminalBenchScore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpsertTerminalBenchScoreRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModelCatalogServiceServer).UpsertTerminalBenchScore(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ModelCatalogService_UpsertTerminalBenchScore_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModelCatalogServiceServer).UpsertTerminalBenchScore(ctx, req.(*UpsertTerminalBenchScoreRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ModelCatalogService_ServiceDesc is the grpc.ServiceDesc for ModelCatalogService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -206,6 +246,10 @@ var ModelCatalogService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListModels",
 			Handler:    _ModelCatalogService_ListModels_Handler,
+		},
+		{
+			MethodName: "UpsertTerminalBenchScore",
+			Handler:    _ModelCatalogService_UpsertTerminalBenchScore_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

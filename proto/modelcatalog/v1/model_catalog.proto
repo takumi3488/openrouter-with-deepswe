@@ -19,6 +19,11 @@ service ModelCatalogService {
   // ListModels returns models matching the given filter, including their
   // OpenRouter pricing and benchmark scores.
   rpc ListModels(ListModelsRequest) returns (ListModelsResponse);
+
+  // UpsertTerminalBenchScore manually records a Terminal-Bench score for a
+  // model. The terminalbench batch re-upserts every matching row on each run,
+  // so a later CronJob run overwrites a manual row with the same key.
+  rpc UpsertTerminalBenchScore(UpsertTerminalBenchScoreRequest) returns (UpsertTerminalBenchScoreResponse);
 }
 
 message SetFavoriteRequest {
@@ -55,6 +60,24 @@ message ListModelsRequest {
 
 message ListModelsResponse {
   repeated Model models = 1;
+}
+
+message UpsertTerminalBenchScoreRequest {
+  string model_id = 1;
+  // Stable leaderboard version/name, for example "4-0-0" (not "latest").
+  string leaderboard = 2;
+  string agent = 3;
+  // Empty is stored as "default".
+  string reasoning_effort = 4;
+  // Accuracy percentage, in the range 0..100.
+  double accuracy = 5;
+  // 95% confidence-interval half-width in percentage points, 0..100.
+  double accuracy_ci95_half_width = 6;
+}
+
+message UpsertTerminalBenchScoreResponse {
+  // The score as stored, with reasoning_effort normalized.
+  TerminalBenchScore score = 1;
 }
 
 message Model {
